@@ -1,0 +1,17 @@
+\documentstyle{article}[12pt]
+
+\begin{document}
+
+\begin{enumerate}
+\item Fit model on training set using ensemble method like random
+forests.
+\item Fit model to test set.  Get estimates for each sample from each
+tree.  Calculate mean and variance of each estimate.
+\item Construct new y matrix consisting of original y, mean, and
+1/variance, which is alpha in Rob's notation.
+\item Either estimate lambda from GCV or use Rob's node specific lambda
+\end{enumerate}
+
+\end{document}
+
+
