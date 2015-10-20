@@ -57,3 +57,6 @@ aim2.split <- function(y, wt, x, parms, continuous)
             alphabar.right <- alpha.right/(n-i)
       }
   }
+
+
+    
