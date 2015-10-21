@@ -9,7 +9,13 @@ forests.
 tree.  Calculate mean and variance of each estimate.
 \item Construct new y matrix consisting of original y, mean, and
 1/variance, which is alpha in Rob's notation.
-\item Either estimate lambda from GCV or use Rob's node specific lambda
+\item Either estimate $\lambda$ from GCV or use Rob's node specific
+  $\lambda$.  The node specific $\lambda$ is $\sigma^2_z/(n
+  \bar{\alpha} (c_{\nu}-\hat{\bar{Z}})^2)$.  Estimate $c_{\nu}$ as the
+  node specific mean and $\sigma^2_z$ as the node specific variance.
+  Then $n$ is the number of samples in the node, $\bar{\alpha}$ is the
+  average of the $\alpha$s in the node, and $\hat{\bar{Z}}$ is the
+  average of the ensemble estimates in the node.
 \end{enumerate}
 
 \end{document}
