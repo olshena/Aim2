@@ -26,37 +26,43 @@ aim2.eval <- function(y, wt, parms)
   list(label=chat, deviance=rss)
 }
 
-#aim2.split <- function(y, wt, x, parms, continuous)
-#  {
-#    n <- length(y)
-#    if (continuous)
-#      {
-#        goodness <- direction <- double(n-1) #Allocate 0 vector
-#        y.cumsum <- cumsum(y[,1]*wt)
-#        y.left <- y.cumsum[-n]
-#        y.right <- y.cumsum[n]-y.left
-#        yhat.cumsum <- cumsum(y[,2]*wt*y[,3])
-#        yhat.left <- yhat.cumsum[-n]
-#        yhat.right <- yhat.cumsum[n]-yhat.left
-#        alpha.cumsum <- cumsum(y[,3])
-#        alpha.left <- alpha.cumsum[-n]
-#        alpha.right <- alpha.cumsum[n]-alpha.left
-#        wt.cumsum <- cumsum(wt)
-#        wt.left <- wt.cumsum[-n]
-#        wt.right <- wt.cumsum[n]-wt.left
-#        alpha.wt.cumsum <- cumsum(y[,3]*wt)
-#        alpha.wt.left <- alpha.wt.cumsum[-n]
-#        alpha.wt.right <- alpha.wt.cumsum[n]-alpha.wt.right
-#        for(i in 1:(n-1))
-#          {
-#            zbar.left <- y.left[i]/wt.left[i]
-#            zbar.right <- y.right[i]/wt.right[i]
-#            zbarhat.left <- yhat.left[i]/alpha.wt.left[i]
-#            zbarhat.right <- yhat.right[i]/alpha.wt.right[i]
-#            alphabar.left <- alpha.left/i
-#            alphabar.right <- alpha.right/(n-i)
-#      }
-#  }
-#
+aim2.split <- function(y, wt, x, parms, continuous)
+  {
+    n <- length(y)
+    y1 <- y[,1]
+    yhat <- y[,2]
+    alpha <- y[,3]
+    if (continuous)
+      {
+        goodness <- direction <- double(n-1) #Allocate 0 vector
+        y.cumsum <- cumsum(y1)
+        y.left <- y.cumsum[-n]
+        y.right <- y.cumsum[n]-y.left
+        yhat.cumsum <- cumsum(yhat*alpha)
+        yhat.left <- yhat.cumsum[-n]
+        yhat.right <- yhat.cumsum[n]-yhat.left
+        alpha.cumsum <- cumsum(alpha)
+        alpha.left <- alpha.cumsum[-n]
+        alpha.right <- alpha.cumsum[n]-alpha.left
+        for(i in 1:(n-1))
+          {
+            zbar.left <- y.left[i]/i
+            zbar.right <- y.right[i]/(n-i)
+            zbarhat.left <- yhat.left[i]/alpha.left[i]
+            zbarhat.right <- yhat.right[i]/alpha.right[i]
+            alphabar.left <- alpha.left/i
+            alphabar.right <- alpha.right/(n-i)
+            r.left <- 1/(1+lambda*alphabar.left)
+            r.right <- 1/(1+lambda*alphabar.right)
+            chat.left <- r.left*zbar.left+(1-r.left)*zbarhat.left
+            chat.right <- r.right*zbar.right+(1-r.right)*zbarhat.right
+            goodness[i] <- sum((y1[1:i]-chat.left)^2 + lambda*alpha[1:i]*(yhat[1:i]-chat.left)^2) +
+              sum((y1[(i+1):n]-chat.right)^2 + lambda*alpha[(i+1):n]*(yhat[(i+1):n]-chat.right)^2)
+            if(zbar.left>zbar.right) direction[i] <- 1
+            else direction[i] <- (-1)
+          }
+      }
+    list(goodness=goodness, direction=direction)    
+  }
 
     
