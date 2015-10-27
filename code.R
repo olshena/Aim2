@@ -19,44 +19,44 @@ aim2.eval <- function(y, wt, parms)
   alphabar <- sum(alphas)/n
   y <- y[,1]
   r <- 1/(1+lambda*alphabar)
-  zbar <- sum(y*wt)/sum(wt) 
-  zbarhat <- sum(yhat*wt*alphas)/sum(wt*alphas)
+  zbar <- mean(y)
+  zbarhat <- sum(yhat*alphas)/sum(alphas)
   chat <- r*zbar+(1-r)*zbarhat
-  rss <- sum(wt*((y-chat)^2+lambda*alphas*(chat-yhat)^2))
+  rss <- sum((y-chat)^2+lambda*alphas*(chat-yhat)^2)
   list(label=chat, deviance=rss)
 }
 
-aim2.split <- function(y, wt, x, parms, continuous)
-  {
-    n <- length(y)
-    if (continuous)
-      {
-        goodness <- direction <- double(n-1) #Allocate 0 vector
-        y.cumsum <- cumsum(y[,1]*wt)
-        y.left <- y.cumsum[-n]
-        y.right <- y.cumsum[n]-y.left
-        yhat.cumsum <- cumsum(y[,2]*wt*y[,3])
-        yhat.left <- yhat.cumsum[-n]
-        yhat.right <- yhat.cumsum[n]-yhat.left
-        alpha.cumsum <- cumsum(y[,3])
-        alpha.left <- alpha.cumsum[-n]
-        alpha.right <- alpha.cumsum[n]-alpha.left
-        wt.cumsum <- cumsum(wt)
-        wt.left <- wt.cumsum[-n]
-        wt.right <- wt.cumsum[n]-wt.left
-        alpha.wt.cumsum <- cumsum(y[,3]*wt)
-        alpha.wt.left <- alpha.wt.cumsum[-n]
-        alpha.wt.right <- alpha.wt.cumsum[n]-alpha.wt.right
-        for(i in 1:(n-1))
-          {
-            zbar.left <- y.left[i]/wt.left[i]
-            zbar.right <- y.right[i]/wt.right[i]
-            zbarhat.left <- yhat.left[i]/alpha.wt.left[i]
-            zbarhat.right <- yhat.right[i]/alpha.wt.right[i]
-            alphabar.left <- alpha.left/i
-            alphabar.right <- alpha.right/(n-i)
-      }
-  }
-
+#aim2.split <- function(y, wt, x, parms, continuous)
+#  {
+#    n <- length(y)
+#    if (continuous)
+#      {
+#        goodness <- direction <- double(n-1) #Allocate 0 vector
+#        y.cumsum <- cumsum(y[,1]*wt)
+#        y.left <- y.cumsum[-n]
+#        y.right <- y.cumsum[n]-y.left
+#        yhat.cumsum <- cumsum(y[,2]*wt*y[,3])
+#        yhat.left <- yhat.cumsum[-n]
+#        yhat.right <- yhat.cumsum[n]-yhat.left
+#        alpha.cumsum <- cumsum(y[,3])
+#        alpha.left <- alpha.cumsum[-n]
+#        alpha.right <- alpha.cumsum[n]-alpha.left
+#        wt.cumsum <- cumsum(wt)
+#        wt.left <- wt.cumsum[-n]
+#        wt.right <- wt.cumsum[n]-wt.left
+#        alpha.wt.cumsum <- cumsum(y[,3]*wt)
+#        alpha.wt.left <- alpha.wt.cumsum[-n]
+#        alpha.wt.right <- alpha.wt.cumsum[n]-alpha.wt.right
+#        for(i in 1:(n-1))
+#          {
+#            zbar.left <- y.left[i]/wt.left[i]
+#            zbar.right <- y.right[i]/wt.right[i]
+#            zbarhat.left <- yhat.left[i]/alpha.wt.left[i]
+#            zbarhat.right <- yhat.right[i]/alpha.wt.right[i]
+#            alphabar.left <- alpha.left/i
+#            alphabar.right <- alpha.right/(n-i)
+#      }
+#  }
+#
 
     
