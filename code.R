@@ -32,8 +32,10 @@ aim2.split <- function(y, wt, x, parms, continuous)
     y1 <- y[,1]
     yhat <- y[,2]
     alpha <- y[,3]
+    lambda <- parms$lambda
     if (continuous)
       {
+        if(is.null(lambda)) compute.lambda #Placeholder until I figure out how to compute lambda
         goodness <- direction <- double(n-1) #Allocate 0 vector
         y.cumsum <- cumsum(y1)
         y.left <- y.cumsum[-n]
@@ -57,7 +59,7 @@ aim2.split <- function(y, wt, x, parms, continuous)
             chat.left <- r.left*zbar.left+(1-r.left)*zbarhat.left
             chat.right <- r.right*zbar.right+(1-r.right)*zbarhat.right
             goodness[i] <- sum((y1[1:i]-chat.left)^2 + lambda*alpha[1:i]*(yhat[1:i]-chat.left)^2) +
-              sum((y1[(i+1):n]-chat.right)^2 + lambda*alpha[(i+1):n]*(yhat[(i+1):n]-chat.right)^2)
+              sum((y1[(i+1):n]-chat.right)^2 + lambda*alpha[(i+1):n]*(yhat[(i+1):n]-chat.right)^2) #Do we need adjustment for missing values like in  vignette example?
             if(zbar.left>zbar.right) direction[i] <- 1
             else direction[i] <- (-1)
           }
