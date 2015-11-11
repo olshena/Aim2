@@ -3,6 +3,8 @@
 library(rpart)
 library(randomForest)
 
+source("code.R")
+
 print(sessionInfo())
 
 housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
@@ -21,10 +23,10 @@ fit.rpart.training <- rpart(mdev ~ .,data = housing.data.training)
 predict.rpart.test <- predict(fit.rpart.training,newdata=housing.data.test)
 
 fit.rf.training <- randomForest(mdev ~ .,data = housing.data.training)
-predict.rf.test <- predict(fit.rf.training,newdata=housing.data.test)
+predict.rf.test <- predict(fit.rf.training,newdata=housing.data.test,predict.all=TRUE)
 
 residuals.rpart.test <- housing.data.test$mdev-predict.rpart.test
-residuals.rf.test <- housing.data.test$mdev-predict.rf.test
+residuals.rf.test <- housing.data.test$mdev-predict.rf.test$aggregate
 
 squared.residuals.rpart.test <- sum(residuals.rpart.test^2)
 squared.residuals.rf.test <- sum(residuals.rf.test^2)
@@ -32,8 +34,19 @@ squared.residuals.rf.test <- sum(residuals.rf.test^2)
 abs.residuals.rpart.test <- sum(abs(residuals.rpart.test))
 abs.residuals.rf.test <- sum(abs(residuals.rf.test))
 
+var.z1s <-  apply(predict.rf.test$individual,1,var)
+alphas <- 1/var.z1s
 
+mean.test <- mean(housing.data.test$mdev)
+var.test <- var(housing.data.test$mdev)
+n <- nrow(housing.data.test)
+zbarhat <- mean(predict.rf.test$aggregate)
+alphabar <- mean(alphas)
 
+lambda <- var.test/(n*alphabar*(mean.test-zbarhat)^2)
+
+aim2.list <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, summary=aim2.summary, text=aim2.text)
+aim2.fit <- rpart(mdev ~ .,data = housing.data.test,parms=list(lambda=lambda,yhat=predict.rf.test$aggregrate,alpha=alphas),method=aim2.list)
 
 
 

@@ -14,8 +14,9 @@ tree.  Calculate mean and variance of each estimate.
   \bar{\alpha} (c_{\nu}-\hat{\bar{Z}})^2)$.  Estimate $c_{\nu}$ as the
   node specific mean and $\sigma^2_z$ as the node specific variance.
   Then $n$ is the number of samples in the node, $\bar{\alpha}$ is the
-  average of the $\alpha$s in the node, and $\hat{\bar{Z}}$ is the
-  average of the ensemble estimates in the node.
+  average of the $\alpha$s in the node, where each $\alpha$ is the
+  inverse of the variance of the tree predictions, and $\hat{\bar{Z}}$
+  is the average of the ensemble estimates in the node.
 \end{enumerate}
 
 \end{document}

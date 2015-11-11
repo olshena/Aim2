@@ -5,34 +5,56 @@
 aim2.init <- function(y, offset, parms, wt)
 {
   if (!is.null(offset)) y[,1] <- y[,1]-offset
-  if (!is.matrix(y)) stop("response must be a matrix")
-  if (ncol(y)!=3) stop("response must be an n by 3 matrix")
-  list(y=y, parms=parms, numy=3, numresp=1)
+#  if (!is.matrix(y)) stop("response must be a matrix")
+#  if (ncol(y)!=3) stop("response must be an n by 3 matrix")
+  print("yinit")
+  print(y[1:10])
+  print("yhatinit")
+  print(parms$yhat[1:10])
+  print("alphainit")
+  print(parms$alpha[1:10])  
+  list(y=cbind(y,parms$yhat,parms$alpha),parms=parms, numy=3, numresp=1)
 }
 
 aim2.eval <- function(y, wt, parms)
 {
+  print("In eval")
   n <- length(y)
+  print("neval"); print(n)
   lambda <- parms$lambda
   yhat <- y[,2]
+  print("yhateval");  print(parms$yhat[1:10])  
   alphas <- y[,3]
+  print("alphainit");  print(parms$alpha[1:10])    
   alphabar <- sum(alphas)/n
   y <- y[,1]
   r <- 1/(1+lambda*alphabar)
   zbar <- mean(y)
   zbarhat <- sum(yhat*alphas)/sum(alphas)
   chat <- r*zbar+(1-r)*zbarhat
+  print("chat"); print(chat)
   rss <- sum((y-chat)^2+lambda*alphas*(chat-yhat)^2)
+  print("rss"); print(rss)
   list(label=chat, deviance=rss)
 }
 
 aim2.split <- function(y, wt, x, parms, continuous)
   {
+    print("In split")
+    print(y[1,])
     n <- length(y)
+    print(n)
     y1 <- y[,1]
+    print("y1")
+    print(y1[1:10])
     yhat <- y[,2]
+    print("yhat")
+    print(yhat[1:10])
     alpha <- y[,3]
+    print("alpha")
+    print(alpha[1:10])
     lambda <- parms$lambda
+    print(lambda)
     if (continuous)
       {
         if(is.null(lambda)) compute.lambda #Placeholder until I figure out how to compute lambda
@@ -67,4 +89,17 @@ aim2.split <- function(y, wt, x, parms, continuous)
     list(goodness=goodness, direction=direction)    
   }
 
-    
+aim2.summary <- function(yval, dev, wt, ylevel, digits )
+{
+  paste(" mean=", format(signif(yval, digits)), ", MSE=" , format(signif(dev/wt, digits)), sep= '')
+}
+
+aim2.text <- function(yval, dev, wt, ylevel, digits, n, use.n )
+{
+  if(use.n) paste(formatg(yval,digits)," nn=", n,sep="")
+  else paste(formatg(yval,digits))
+}
+
+
+
+
