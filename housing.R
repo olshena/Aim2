@@ -46,7 +46,7 @@ alphabar <- mean(alphas)
 lambda <- var.test/(n*alphabar*(mean.test-zbarhat)^2)
 
 aim2.list <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, summary=aim2.summary, text=aim2.text)
-aim2.fit <- rpart(mdev ~ .,data = housing.data.test,parms=list(lambda=lambda,yhat=predict.rf.test$aggregrate,alpha=alphas),method=aim2.list)
+aim2.fit <- rpart(mdev ~ .,data = housing.data.test,parms=list(lambda=lambda,yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
 
 
 
