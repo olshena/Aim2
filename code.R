@@ -90,17 +90,18 @@ aim2.split <- function(y, wt, x, parms, continuous)
 #            print(paste("length of r.right",length(r.right)))
             goodness[i] <- sum((y1[1:i]-chat.left)^2 + lambda*alpha[1:i]*(yhat[1:i]-chat.left)^2) +
               sum((y1[(i+1):n]-chat.right)^2 + lambda*alpha[(i+1):n]*(yhat[(i+1):n]-chat.right)^2) #Do we need adjustment for missing values like in  vignette example?
-            if(zbar.left>zbar.right) direction[i] <- 1
-            else direction[i] <- (-1)
+            direction[i] <- sign(zbar.left-zbar.right)
             goodness.left <- sum((y1[1:i]-chat.left)^2 + lambda*alpha[1:i]*(yhat[1:i]-chat.left)^2)
             goodness.right <- sum((y1[(i+1):n]-chat.right)^2 + lambda*alpha[(i+1):n]*(yhat[(i+1):n]-chat.right)^2)
  if(i==16)           print(paste("i=",i,",x=",x[i],",chat.left=",chat.left,",chat.right=",chat.right,",goodness.left=",goodness.left,",goodness.right=",goodness.right,",goodness=",goodness[i],sep=""))
           }
       }
+    goodness <- 1/goodness
     print(paste("position=",order(goodness)[1],sep=""))
     print(paste("min(goodness)=",min(goodness),sep=""))
+    print(paste("max(goodness)=",max(goodness),sep=""))
     print("direction"); print(direction)
-    list(goodness=goodness, direction=direction)    
+    return(list(goodness=goodness, direction=direction))
   }
 
 aim2.summary <- function(yval, dev, wt, ylevel, digits )

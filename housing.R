@@ -48,10 +48,13 @@ alphabar <- mean(alphas)
 lambda <- var.test/(n*alphabar*(mean.test-zbarhat)^2)
 lambda0 <- 0
 
-#aim2.list <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, summary=aim2.summary, text=aim2.text)
-#aim2.fit <- rpart(mdev ~ .,data = housing.data.test,parms=list(lambda=lambda,yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
+set.seed(12345)
 
-source("code.R")
+aim2.list <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, summary=aim2.summary, text=aim2.text)
+aim2.fit <- rpart(mdev ~ .,data = housing.data.test,parms=list(lambda=lambda,yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
+
+set.seed(12345)
+
 aim2.list0 <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, summary=aim2.summary, text=aim2.text)
 aim2.fit0 <- rpart(mdev ~ .,data = housing.data.test,parms=list(lambda=lambda0,yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list0)
 
@@ -64,6 +67,9 @@ res.dats <- sum((dats-mean.dats)^2)
 
 order.data <- c(146,32,34,173,109,150,107,95,43,    237,246, 251)
 
-
+order.8 <- order(housing.data.test[,8])
+data.8 <- housing.data.test[order.8[17:253],14]
+mean.8 <- mean(data.8)
+rss.8 <- sum((data.8-mean.8)^2)
 
 
