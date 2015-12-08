@@ -59,17 +59,17 @@ aim2.list0 <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, summary=aim
 aim2.fit0 <- rpart(mdev ~ .,data = housing.data.test,parms=list(lambda=lambda0,yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list0)
 
 
-which.greater <- which(housing.data.test[,13]>=5.445)
-dats <- housing.data.test[which.greater,14]
-mean.dats <- mean(dats)
-res.dats <- sum((dats-mean.dats)^2)
-
-
-order.data <- c(146,32,34,173,109,150,107,95,43,    237,246, 251)
-
-order.8 <- order(housing.data.test[,8])
-data.8 <- housing.data.test[order.8[17:253],14]
-mean.8 <- mean(data.8)
-rss.8 <- sum((data.8-mean.8)^2)
+#which.greater <- which(housing.data.test[,13]>=5.445)
+#dats <- housing.data.test[which.greater,14]
+#mean.dats <- mean(dats)
+#res.dats <- sum((dats-mean.dats)^2)
+#
+#
+#order.data <- c(146,32,34,173,109,150,107,95,43,    237,246, 251)
+#
+#order.8 <- order(housing.data.test[,8])
+#data.8 <- housing.data.test[order.8[17:253],14]
+#mean.8 <- mean(data.8)
+#rss.8 <- sum((data.8-mean.8)^2)
 
 

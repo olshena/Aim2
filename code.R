@@ -88,19 +88,25 @@ aim2.split <- function(y, wt, x, parms, continuous)
 #            print(paste("length of alphabar.right",length(alphabar.right)))
 #            print(paste("length of r.left",length(r.left)))
 #            print(paste("length of r.right",length(r.right)))
-            goodness[i] <- sum((y1[1:i]-chat.left)^2 + lambda*alpha[1:i]*(yhat[1:i]-chat.left)^2) +
-              sum((y1[(i+1):n]-chat.right)^2 + lambda*alpha[(i+1):n]*(yhat[(i+1):n]-chat.right)^2) #Do we need adjustment for missing values like in  vignette example?
+#            goodness[i] <- sum((y1-mean(y1))^2) - (sum((y1[1:i]-chat.left)^2 +
+#                                                       lambda*alpha[1:i]*(yhat[1:i]-chat.left)^2) +
+#                                                   sum((y1[(i+1):n]-chat.right)^2 +
+#                                                       lambda*alpha[(i+1):n]*(yhat[(i+1):n]-chat.right)^2)) #Do we need adjustment for missing values like in  vignette example?
             direction[i] <- sign(zbar.left-zbar.right)
             goodness.left <- sum((y1[1:i]-chat.left)^2 + lambda*alpha[1:i]*(yhat[1:i]-chat.left)^2)
             goodness.right <- sum((y1[(i+1):n]-chat.right)^2 + lambda*alpha[(i+1):n]*(yhat[(i+1):n]-chat.right)^2)
- if(i==16)           print(paste("i=",i,",x=",x[i],",chat.left=",chat.left,",chat.right=",chat.right,",goodness.left=",goodness.left,",goodness.right=",goodness.right,",goodness=",goodness[i],sep=""))
+            tss <- sum((y1-mean(y1))^2)
+            goodness[i] <- tss-goodness.left-goodness.right
+            if(i==16)           print(paste("i=",i,",x=",x[i],",chat.left=",chat.left,",chat.right=",chat.right,",goodness.left=",goodness.left,",goodness.right=",goodness.right,",tss=",tss,",goodness=",goodness[i],sep=""))
           }
       }
-    goodness <- 1/goodness
+#    goodness <- 1/goodness
     print(paste("position=",order(goodness)[1],sep=""))
     print(paste("min(goodness)=",min(goodness),sep=""))
     print(paste("max(goodness)=",max(goodness),sep=""))
-    print("direction"); print(direction)
+    print("y1[1:16]")
+    print(y1[1:16])
+#    print("direction"); print(direction)
     return(list(goodness=goodness, direction=direction))
   }
 
