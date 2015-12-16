@@ -1,5 +1,8 @@
 #Implement interpretable trees code 10/17/2015
 
+library(randomForest)
+library(rpart)
+
 #y contains response, yhat from tree, and alpha where alpha=1/var(zhat)
 
 aim2.init <- function(y, offset, parms, wt)
@@ -122,5 +125,58 @@ aim2.text <- function(yval, dev, wt, ylevel, digits, n, use.n )
 }
 
 
+#dat is a data frame
+#nreps is number of replicates
+#ngrid is number of grid points for lambda
+#mult is multiple times estimated lambda for maximum poinnt in grid
+#seed is
 
+aim2 <- function(dat,nreps=1,ngrid=10,mult=2,seed=12345)
+{
+  set.seed(seed)
+  n <- nrow(dat)
+  mod <- n%/%3
+  div <- n%%3
+  n1 <- n2 <- n3 <- mod
+  if(div==1) n1 <- n1+1
+  else if (div==2) n1 <- n1+1; n2 <- n2+1
+  samp <- sample(1:n,n,replace=TRUE)
+  which1 <- samp[1:n1]
+  which2 <- samp[(n1+1):(n1+n2)]
+  which3 <- samp[(n1+n2+1):n]
+  dat1 <- dat[which1,]
+  dat2 <- dat[which2,]
+  dat3 <- dat[which3,]
+#Fit RF
+  for(i in 1:3)
+    {
+      if(i==1){training.dat <- dat1; test.dat <- dat2; validation.dat <- dat3}
+      else if(i==2){training.dat <- dat2; test.dat <- dat3; validation.dat <- dat1}
+      else if(i==3){training.dat <- dat3; test.dat <- dat1; validation.dat <- dat2}
+      fit.rf.training <- randomForest(mdev ~ .,data = training.dat)
+      predict.rf.test <- predict(fit.rf.training,newdata=test.dat,predict.all=TRUE)
+#Estimate lambda using Rob's method
+      mean.test <- mean(test.dat$mdev)
+      var.test <- var(test.dat$mdev)
+      zbarhat <- mean(predict.rf.test$aggregate)
+      var.z1s <-  apply(predict.rf.test$individual,1,var)
+      alphas <- 1/var.z1s
+      alphabar <- mean(alphas)
+      lambda <- var.test/(n*alphabar*(mean.test-zbarhat)^2)
+      lambdas <- seq(0,mult*lambda,length.out=ngrid)
+#Now loop through lambdas
+      aim2.list <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, summary=aim2.summary, text=aim2.text)
+      aim2.fits <- vector("list",ngrid)
+      aim2.predictions <- vector("list",ngrid)
+      for(j in 1:ngrid)
+        {
+          new.fit <- rpart(mdev ~ .,data = test.dat,parms=list(lambda=lambdas[i],yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
+          aim2.fits[[j]] <- new.fit
+          new.predictions <- predict(new.fit,newdata=validation.dat,predict.all=TRUE)
+          aim2.predictions[[j]] <- new.predictions
+        }
+    }
+  list(predictions=aim2.predictions,fits=aim2.fits)
+}
 
+temp <- aim2(dat=housing.data,nreps=1,ngrid=20,mult=2,seed=12345)
