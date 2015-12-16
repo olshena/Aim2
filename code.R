@@ -13,9 +13,9 @@ aim2.init <- function(y, offset, parms, wt)
 
 aim2.eval <- function(y, wt, parms)
 {
-  print("In eval")
+#  print("In eval")
   n <- length(y)/3
-  print("neval"); print(n)
+#  print("neval"); print(n)
 #  print("y")
 #  print(y)
   lambda <- parms$lambda
@@ -27,20 +27,20 @@ aim2.eval <- function(y, wt, parms)
   alphabar <- sum(alphas)/n
   y1 <- y[,1]
   r <- 1/(1+lambda*alphabar)
-  print("lambda");print(lambda)
-  print("r");print(r)
+#  print("lambda");print(lambda)
+#  print("r");print(r)
   zbar <- mean(y1)
   zbarhat <- sum(yhat*alphas)/sum(alphas)
   chat <- r*zbar+(1-r)*zbarhat
-  print("chat"); print(chat)
+#  print("chat"); print(chat)
   rss <- sum((y1-chat)^2+lambda*alphas*(chat-yhat)^2)
-  print("rss"); print(rss)
+#  print("rss"); print(rss)
   list(label=chat, deviance=rss)
 }
 
 aim2.split <- function(y, wt, x, parms, continuous)
   {
-    print("In split")
+#    print("In split")
 #    print(y[1,])
     n <- length(y[,1])
 #    print(n)
@@ -100,15 +100,15 @@ aim2.split <- function(y, wt, x, parms, continuous)
             goodness.right <- sum((y1[(i+1):n]-chat.right)^2 + lambda*alpha[(i+1):n]*(yhat[(i+1):n]-chat.right)^2)
             tss <- sum((y1-mean(y1))^2)
             goodness[i] <- tss-goodness.left-goodness.right
-            if(i==16)           print(paste("i=",i,",x=",x[i],",chat.left=",chat.left,",chat.right=",chat.right,",goodness.left=",goodness.left,",goodness.right=",goodness.right,",tss=",tss,",goodness=",goodness[i],sep=""))
+#            if(i==16)           print(paste("i=",i,",x=",x[i],",chat.left=",chat.left,",chat.right=",chat.right,",goodness.left=",goodness.left,",goodness.right=",goodness.right,",tss=",tss,",goodness=",goodness[i],sep=""))
           }
       }
 #    goodness <- 1/goodness
-    print(paste("position=",order(goodness)[1],sep=""))
-    print(paste("min(goodness)=",min(goodness),sep=""))
-    print(paste("max(goodness)=",max(goodness),sep=""))
-    print("y1[1:16]")
-    print(y1[1:16])
+#    print(paste("position=",order(goodness)[1],sep=""))
+#    print(paste("min(goodness)=",min(goodness),sep=""))
+#    print(paste("max(goodness)=",max(goodness),sep=""))
+#    print("y1[1:16]")
+#    print(y1[1:16])
 #    print("direction"); print(direction)
     return(list(goodness=goodness, direction=direction))
   }
@@ -140,19 +140,26 @@ aim2 <- function(dat,nreps=1,ngrid=10,mult=2,seed=12345)
   n1 <- n2 <- n3 <- mod
   if(div==1) n1 <- n1+1
   else if (div==2) n1 <- n1+1; n2 <- n2+1
-  samp <- sample(1:n,n,replace=TRUE)
+  samp <- sample(1:n,n,replace=FALSE)
   which1 <- samp[1:n1]
   which2 <- samp[(n1+1):(n1+n2)]
   which3 <- samp[(n1+n2+1):n]
   dat1 <- dat[which1,]
   dat2 <- dat[which2,]
   dat3 <- dat[which3,]
-#Fit RF
+  aim2.fits <- vector("list",ngrid)
+  aim2.predictions <- vector("list",ngrid)
+  for(i in 1:ngrid)
+      {
+          aim2.fits[[i]] <- vector("list",3)
+          aim2.predictions[[i]] <- rep(NA,n)
+      }
   for(i in 1:3)
     {
-      if(i==1){training.dat <- dat1; test.dat <- dat2; validation.dat <- dat3}
-      else if(i==2){training.dat <- dat2; test.dat <- dat3; validation.dat <- dat1}
-      else if(i==3){training.dat <- dat3; test.dat <- dat1; validation.dat <- dat2}
+#       print(i) 
+        if(i==1){training.dat <- dat1; test.dat <- dat2; validation.dat <- dat3; new.validation <- which3}
+      else if(i==2){training.dat <- dat2; test.dat <- dat3; validation.dat <- dat1; new.validation <- which1}
+      else if(i==3){training.dat <- dat3; test.dat <- dat1; validation.dat <- dat2; new.validation <- which2}
       fit.rf.training <- randomForest(mdev ~ .,data = training.dat)
       predict.rf.test <- predict(fit.rf.training,newdata=test.dat,predict.all=TRUE)
 #Estimate lambda using Rob's method
@@ -163,20 +170,27 @@ aim2 <- function(dat,nreps=1,ngrid=10,mult=2,seed=12345)
       alphas <- 1/var.z1s
       alphabar <- mean(alphas)
       lambda <- var.test/(n*alphabar*(mean.test-zbarhat)^2)
+      print(lambda)  
       lambdas <- seq(0,mult*lambda,length.out=ngrid)
 #Now loop through lambdas
       aim2.list <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, summary=aim2.summary, text=aim2.text)
-      aim2.fits <- vector("list",ngrid)
-      aim2.predictions <- vector("list",ngrid)
       for(j in 1:ngrid)
         {
-          new.fit <- rpart(mdev ~ .,data = test.dat,parms=list(lambda=lambdas[i],yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
-          aim2.fits[[j]] <- new.fit
+          new.fit <- rpart(mdev ~ .,data = test.dat,parms=list(lambda=lambdas[j],yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
+          aim2.fits[[j]][[i]] <- new.fit
           new.predictions <- predict(new.fit,newdata=validation.dat,predict.all=TRUE)
-          aim2.predictions[[j]] <- new.predictions
+#          print(length(new.predictions))
+#          print(length(new.validation))
+# if(j==1)         print(sort(new.validation))
+          aim2.predictions[[j]][new.validation] <- new.predictions
         }
-    }
-  list(predictions=aim2.predictions,fits=aim2.fits)
+  }
+  rss <- rep(NA,ngrid)
+  for(i in 1:ngrid) rss[i] <- sum((dat$mdev-aim2.predictions[[i]])^2)
+  final.lambda <- lambdas[order(rss)[1]]
+  list(predictions=aim2.predictions,fits=aim2.fits,rss=rss,lambdas=lambdas,final.lambda=final.lambda)
 }
 
+housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
+colnames(housing.data) <- c("crim","zn","indus","chas","nox","rm","age","dis","rad","tax","ptratiob","b","lstat","mdev")
 temp <- aim2(dat=housing.data,nreps=1,ngrid=20,mult=2,seed=12345)
