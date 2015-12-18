@@ -131,54 +131,69 @@ aim2.text <- function(yval, dev, wt, ylevel, digits, n, use.n )
 #mult is multiple times estimated lambda for maximum poinnt in grid
 #seed is
 
-aim2 <- function(dat,nreps=1,ngrid=10,mult=2,seed=12345)
+aim2 <- function(dat,nreps=1,ngrid=20,mult=2,seed=12345)
 {
+#Functions that go into penalized fitting method  
+  aim2.list <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, summary=aim2.summary, text=aim2.text)
   set.seed(seed)
   n <- nrow(dat)
+#Make training and test data
+  ntrain <- round(n/2)
+  ntest <- n-ntrain
+  samp <- sample(1:n,n,replace=FALSE)
+  wtrain <- sort(samp[1:ntrain])
+  wtest <- sort(samp[(ntrain+1):n])
+  training.dat <- dat[wtrain,]
+  test.dat <- dat[wtest,]
+#The lambdas chosen by Rob's method  
+  fit.rf.training <- randomForest(mdev ~ .,data = training.dat)
+  predict.rf.test <- predict(fit.rf.training,newdata=test.dat,predict.all=TRUE)
+  mean.test <- mean(test.dat$mdev)
+  var.test <- var(test.dat$mdev)
+  zbarhat <- mean(predict.rf.test$aggregate)
+  var.z1s <-  apply(predict.rf.test$individual,1,var)
+  alphas <- 1/var.z1s
+  alphabar <- mean(alphas)
+  lambda <- var.test/(ntest*alphabar*(mean.test-zbarhat)^2)
+  lambdas <- seq(0,mult*lambda,length.out=ngrid)
+#Now do three-fold cross-validation to choose among lambdas  
   mod <- n%/%3
   div <- n%%3
   n1 <- n2 <- n3 <- mod
   if(div==1) n1 <- n1+1
   else if (div==2) n1 <- n1+1; n2 <- n2+1
   samp <- sample(1:n,n,replace=FALSE)
-  which1 <- samp[1:n1]
-  which2 <- samp[(n1+1):(n1+n2)]
-  which3 <- samp[(n1+n2+1):n]
+  which1 <- sort(samp[1:n1])
+  which2 <- sort(samp[(n1+1):(n1+n2)])
+  which3 <- sort(samp[(n1+n2+1):n])
   dat1 <- dat[which1,]
   dat2 <- dat[which2,]
   dat3 <- dat[which3,]
   aim2.fits <- vector("list",ngrid)
   aim2.predictions <- vector("list",ngrid)
   for(i in 1:ngrid)
-      {
-          aim2.fits[[i]] <- vector("list",3)
-          aim2.predictions[[i]] <- rep(NA,n)
-      }
+    {
+      aim2.fits[[i]] <- vector("list",3)
+      aim2.predictions[[i]] <- rep(NA,n)
+    }
+#3-fold
   for(i in 1:3)
     {
 #       print(i) 
-        if(i==1){training.dat <- dat1; test.dat <- dat2; validation.dat <- dat3; new.validation <- which3}
-      else if(i==2){training.dat <- dat2; test.dat <- dat3; validation.dat <- dat1; new.validation <- which1}
-      else if(i==3){training.dat <- dat3; test.dat <- dat1; validation.dat <- dat2; new.validation <- which2}
-      fit.rf.training <- randomForest(mdev ~ .,data = training.dat)
-      predict.rf.test <- predict(fit.rf.training,newdata=test.dat,predict.all=TRUE)
-#Estimate lambda using Rob's method
-      mean.test <- mean(test.dat$mdev)
-      var.test <- var(test.dat$mdev)
-      zbarhat <- mean(predict.rf.test$aggregate)
-      var.z1s <-  apply(predict.rf.test$individual,1,var)
-      alphas <- 1/var.z1s
-      alphabar <- mean(alphas)
-      lambda <- var.test/(n*alphabar*(mean.test-zbarhat)^2)
-      print(lambda)  
-      lambdas <- seq(0,mult*lambda,length.out=ngrid)
+      if(i==1){tr.dat <- dat1; te.dat <- dat2; val.dat <- dat3; new.validation <- which3}
+      else if(i==2){tr.dat <- dat2; te.dat <- dat3; val.dat <- dat1; new.validation <- which1}
+      else if(i==3){tr.dat <- dat3; te.dat <- dat1; val.dat <- dat2; new.validation <- which2}
+      fit.rf.tr <- randomForest(mdev ~ .,data = tr.dat)
+      predict.rf.te <- predict(fit.rf.tr,newdata=te.dat,predict.all=TRUE)
+      var.z1s.3 <-  apply(predict.rf.te$individual,1,var)
+      alphas.3 <- 1/var.z1s.3
+      alphabar.3 <- mean(alphas.3)
 #Now loop through lambdas
-      aim2.list <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, summary=aim2.summary, text=aim2.text)
-      for(j in 1:ngrid)
+    for(j in 1:ngrid)
         {
-          new.fit <- rpart(mdev ~ .,data = test.dat,parms=list(lambda=lambdas[j],yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
+          new.fit <- rpart(mdev ~ .,data = te.dat,parms=list(lambda=lambdas[j],yhat=predict.rf.te$aggregate,alpha=alphas.3),method=aim2.list)
           aim2.fits[[j]][[i]] <- new.fit
-          new.predictions <- predict(new.fit,newdata=validation.dat,predict.all=TRUE)
+          new.predictions <- predict(new.fit,newdata=val.dat,predict.all=TRUE)
 #          print(length(new.predictions))
 #          print(length(new.validation))
 # if(j==1)         print(sort(new.validation))
@@ -188,7 +203,8 @@ aim2 <- function(dat,nreps=1,ngrid=10,mult=2,seed=12345)
   rss <- rep(NA,ngrid)
   for(i in 1:ngrid) rss[i] <- sum((dat$mdev-aim2.predictions[[i]])^2)
   final.lambda <- lambdas[order(rss)[1]]
-  list(predictions=aim2.predictions,fits=aim2.fits,rss=rss,lambdas=lambdas,final.lambda=final.lambda)
+  final.fit <- rpart(mdev ~ .,data = test.dat,parms=list(lambda=final.lambda,yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
+  list(final.fit=final.fit,predictions=aim2.predictions,fits=aim2.fits,rss=rss,lambdas=lambdas,final.lambda=final.lambda)
 }
 
 housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
