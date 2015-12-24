@@ -131,7 +131,7 @@ aim2.text <- function(yval, dev, wt, ylevel, digits, n, use.n )
 #mult is multiple times estimated lambda for maximum poinnt in grid
 #seed is
 
-find.lambda <- function(dat,lambdas)
+find.lambda <- function(dat,lambdas,list.object)
   {
 #Now do three-fold cross-validation to choose among lambdas  
     n <- nrow(dat)
@@ -170,7 +170,7 @@ find.lambda <- function(dat,lambdas)
 #Now loop through lambdas
         for(j in 1:ngrid)
           {
-            new.fit <- rpart(outvar.aim2 ~ .,data = te.dat,parms=list(lambda=lambdas[j],yhat=predict.rf.te$aggregate,alpha=alphas.3),method=aim2.list)
+            new.fit <- rpart(outvar.aim2 ~ .,data = te.dat,parms=list(lambda=lambdas[j],yhat=predict.rf.te$aggregate,alpha=alphas.3),method=list.object)
             aim2.fits[[j]][[i]] <- new.fit
             new.predictions <- predict(new.fit,newdata=val.dat,predict.all=TRUE)
 #          print(length(new.predictions))
@@ -184,6 +184,13 @@ find.lambda <- function(dat,lambdas)
     final.lambda <- lambdas[order(rss)[1]]
     final.lambda
   }
+
+#dat is data frame to which model is fit
+#nreps is not used right now
+#ngrid is the number of lambdas in the grid search
+#mult is the number multiplied times the intial lambda the is the maximum lambda in the grid search
+#seed fixes the random number generator for reproducibility
+#outvar is the name of the outcome variable in the fitting
 
 aim2 <- function(dat,nreps=1,ngrid=20,mult=2,seed=12345,outvar="mdev")
 {
@@ -213,10 +220,13 @@ aim2 <- function(dat,nreps=1,ngrid=20,mult=2,seed=12345,outvar="mdev")
   alphabar <- mean(alphas)
   lambda <- var.test/(ntest*alphabar*(mean.test-zbarhat)^2)
   lambdas <- seq(0,mult*lambda,length.out=ngrid)
-  final.lambda <- find.lambda(dat,lambdas)
+  final.lambda <- find.lambda(dat=dat,lambdas=lambdas,list.object=aim2.list)
   final.fit <- rpart(outvar.aim2 ~ .,data = test.dat,parms=list(lambda=final.lambda,yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
   list(final.fit=final.fit,lambdas=lambdas,final.lambda=final.lambda)
 }
+#final.fit is rpart tree chosen by optimal lambda
+#lambdas are the values of lambda from grid search
+#final.lambda is the optimal lambda chosen by 3-fold cross-validation
 
 housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
 colnames(housing.data) <- c("crim","zn","indus","chas","nox","rm","age","dis","rad","tax","ptratiob","b","lstat","mdev")
