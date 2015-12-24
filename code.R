@@ -221,7 +221,7 @@ aim2 <- function(dat,nreps=1,ngrid=20,mult=2,seed=12345,outvar="mdev")
 #lambdas are the values of lambda from grid search
 #final.lambda is the optimal lambda chosen by 3-fold cross-validation
 
-housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
-colnames(housing.data) <- c("crim","zn","indus","chas","nox","rm","age","dis","rad","tax","ptratiob","b","lstat","mdev")
-temp <- aim2(dat=housing.data,nreps=1,ngrid=20,mult=2,seed=12345,outvar="mdev")
+#housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
+#colnames(housing.data) <- c("crim","zn","indus","chas","nox","rm","age","dis","rad","tax","ptratiob","b","lstat","mdev")
+#temp <- aim2(dat=housing.data,nreps=1,ngrid=20,mult=2,seed=12345,outvar="mdev")
 
