@@ -124,13 +124,6 @@ aim2.text <- function(yval, dev, wt, ylevel, digits, n, use.n )
   else paste(formatg(yval,digits))
 }
 
-
-#dat is a data frame
-#nreps is number of replicates
-#ngrid is number of grid points for lambda
-#mult is multiple times estimated lambda for maximum poinnt in grid
-#seed is
-
 find.lambda <- function(dat,lambdas,list.object)
   {
 #Now do three-fold cross-validation to choose among lambdas  
