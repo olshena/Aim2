@@ -178,13 +178,38 @@ find.lambda <- function(dat,lambdas,list.object)
     final.lambda
   }
 
+
+bootstrap.lambda <- function(dat,lambdas,list.object,model,predicted.values,alphas,nboot=10)
+  {
+    n1 <- nrows(dat)
+    p <- ncols(dat)
+    cilambda <- matrix(0,n1,nboot)
+    boot.dat <- matrix(NA,n1,nboot)
+    boot.mean <- apply(boot.dat,1,mean)
+    boot.residual2 <- (boot.dat-boot.mean)^2
+    sigmahat <- sqrt(sum((dat[,p]-predicted.values)^2)/n1)
+    for (i in 1:nboot) boot.dat[,i] <- rnorm(n1,mean=predicted.values,sd=sigmahat)
+    n.lambdas <- length(lambdas)
+    for(i in 1:n.boot)
+      {
+        new.dat <- dat
+        new.dat[,p] <- boot.dat[,i]
+        for(j in 1:n.lambdas)
+          {
+            final.fit <- rpart(outvar.aim2 ~ .,data = new.dat,parms=list(lambda=lambdas[j],yhat=predicted.values,alpha=alphas),method=list.object)
+            muhat <- predict.rpart(object=final.fit,newdata=new.dat)
+            cilambda[i,j] <- sum(muhat*residual2)
+          }
+      }
+  }
+
 #dat is data frame to which model is fit
 #nreps is not used right now
 #ngrid is the number of lambdas in the grid search
 #mult is the number multiplied times the intial lambda the is the maximum lambda in the grid search
 #seed fixes the random number generator for reproducibility
 #outvar is the name of the outcome variable in the fitting
-
+                             
 aim2 <- function(dat,nreps=1,ngrid=20,mult=2,seed=12345,outvar="mdev")
 {
 #Functions that go into penalized fitting method  
