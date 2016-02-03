@@ -180,23 +180,24 @@ find.lambda <- function(dat,lambdas,list.object)
 
 corrected.lambda <- function(dat,lambdas,list.object,model,predicted.values,alphas,n.boot=10)
   {
-    n1 <- nrows(dat)
-    p <- ncols(dat)
+    n1 <- nrow(dat)
+    p <- ncol(dat)
     n.lambdas <- length(lambdas)
-    cilambda <- matrix(0,n1,n.lmbdas)
-    boot.dat <- matrix(NA,n1,n.boot)
-    boot.mean <- apply(boot.dat,1,mean)
-    boot.residual <- boot.dat-boot.mean
-    sigmahat <- sqrt(sum((dat[,p]-predicted.values)^2)/n1)
+    cilambda <- matrix(0,n1,n.lambdas)
+    boot.dat <- boot.residual <- matrix(NA,n1,n.boot)
+    sigmahat <- sqrt(sum((as.numeric(dat[,p])-predicted.values)^2)/n1)
+    for(i in 1:n.boot) boot.dat[,i] <- rnorm(n1,mean=predicted.values,sd=sigmahat)
+    boot.mean <- matrix(apply(boot.dat,1,mean))
+    for(i in 1:ncol(boot.dat)) boot.residual[i,] <- boot.dat[i,]-boot.mean[i]
     for(i in 1:n.boot)
       {
         new.dat <- dat
-        new.dat[,p] <- rnorm(n1,mean=predicted.values,sd=sigmahat)
+        new.dat[,p] <- boot.dat[,i] 
         for(j in 1:n.lambdas)
           {
             final.fit <- rpart(outvar.aim2 ~ .,data = new.dat,parms=list(lambda=lambdas[j],yhat=predicted.values,alpha=alphas),method=list.object)
-            muhat <- predict.rpart(object=final.fit,newdata=new.dat)
-            cilambda[,j] <- cilambda[,j]+sum(muhat*residual)
+            muhat <- predict(object=final.fit,newdata=new.dat)
+            cilambda[,j] <- cilambda[,j]+sum(muhat*boot.residual[,j])
           }
       }
     cilambda <- cilambda/(n.boot-1)
@@ -211,7 +212,7 @@ corrected.lambda <- function(dat,lambdas,list.object,model,predicted.values,alph
 #seed fixes the random number generator for reproducibility
 #outvar is the name of the outcome variable in the fitting
                              
-aim2 <- function(dat,nreps=1,ngrid=20,mult=2,seed=12345,outvar="mdev")
+aim2 <- function(dat,nreps=1,n.grid=20,mult=2,seed=12345,outvar="mdev")
 {
 #Functions that go into penalized fitting method  
   aim2.list <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, summary=aim2.summary, text=aim2.text)
@@ -238,26 +239,31 @@ aim2 <- function(dat,nreps=1,ngrid=20,mult=2,seed=12345,outvar="mdev")
   alphas <- 1/var.z1s
   alphabar <- mean(alphas)
   lambda <- var.test/(ntest*alphabar*(mean.test-zbarhat)^2)
-  lambdas <- seq(0,mult*lambda,length.out=ngrid)
+  lambdas <- seq(0,mult*lambda,length.out=n.grid)
   n.lambdas <- length(lambdas)
   error.lambdas <- rep(0,length(lambdas))
+  fits <- vector("list",n.lambdas)
+  predictions <- vector("list",n.lambdas)
   for(i in 1:n.lambdas)
     {
 #  final.lambda <- find.lambda(dat=dat,lambdas=lambdas,list.object=aim2.list)
 #      final.fit <- rpart(outvar.aim2 ~ .,data = test.dat,parms=list(lambda=final.lambda,yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
       current.fit <- rpart(outvar.aim2 ~ .,data = test.dat,parms=list(lambda=lambdas[i],yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
-      predicted.fit <- predict.rpart(object=current.fit,newdata=test.dat)
-      error.lambdas[i] <- mean((test.dat$output.var-predicted.fit)^2)
+      predicted.fit <- predict(object=current.fit,newdata=test.dat)
+      error.lambdas[i] <- mean((test.dat$outvar.aim2-predicted.fit)^2)
+      fits[[i]] <- current.fit
+      predictions[[i]] <- predictions
     }
-  optimism <- corrected.lambda(dat=test.dat,lambdas=lambdas,list.object=aim2.list,model=fit.rf.training,predicted.values=predict.rf.test,alphas=alphas,n.boot=10)
-  Error.lambdas <- error.lambdas+optimism
+ optimism <- corrected.lambda(dat=test.dat,lambdas=lambdas,list.object=aim2.list,model=fit.rf.training,predicted.values=predict.rf.test$aggregate,alphas=alphas,n.boot=10)
+#  Error.lambdas <- error.lambdas+optimism
 #  list(final.fit=final.fit,lambdas=lambdas,final.lambda=final.lambda)
+  list(lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,predictions=predictions,current.fit=current.fit,predicted.fit=predicted.fit,test.dat=test.dat)
 }
 #final.fit is rpart tree chosen by optimal lambda
 #lambdas are the values of lambda from grid search
 #final.lambda is the optimal lambda chosen by 3-fold cross-validation
 
-#housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
-#colnames(housing.data) <- c("crim","zn","indus","chas","nox","rm","age","dis","rad","tax","ptratiob","b","lstat","mdev")
-#temp <- aim2(dat=housing.data,nreps=1,ngrid=20,mult=2,seed=12345,outvar="mdev")
+housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
+colnames(housing.data) <- c("crim","zn","indus","chas","nox","rm","age","dis","rad","tax","ptratiob","b","lstat","mdev")
+temp <- aim2(dat=housing.data,nreps=1,n.grid=20,mult=2,seed=12345,outvar="mdev")
 
