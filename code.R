@@ -185,10 +185,16 @@ corrected.lambda <- function(dat,lambdas,list.object,model,predicted.values,alph
     n.lambdas <- length(lambdas)
     cilambda <- matrix(0,n1,n.lambdas)
     boot.dat <- boot.residual <- matrix(NA,n1,n.boot)
-    sigmahat <- sqrt(sum((as.numeric(dat[,p])-predicted.values)^2)/n1)
+    sigmahat <- sqrt(sum((dat[,p]-predicted.values)^2)/n1)
+#    print(predicted.values)
+#    print(sigmahat)
     for(i in 1:n.boot) boot.dat[,i] <- rnorm(n1,mean=predicted.values,sd=sigmahat)
     boot.mean <- matrix(apply(boot.dat,1,mean))
-    for(i in 1:ncol(boot.dat)) boot.residual[i,] <- boot.dat[i,]-boot.mean[i]
+    for(i in 1:nrow(boot.dat))
+        {
+            boot.residual[i,] <- boot.dat[i,]-boot.mean[i]
+#            print(boot.residual[i,])
+        }
     for(i in 1:n.boot)
       {
         new.dat <- dat
@@ -197,7 +203,7 @@ corrected.lambda <- function(dat,lambdas,list.object,model,predicted.values,alph
           {
             final.fit <- rpart(outvar.aim2 ~ .,data = new.dat,parms=list(lambda=lambdas[j],yhat=predicted.values,alpha=alphas),method=list.object)
             muhat <- predict(object=final.fit,newdata=new.dat)
-            cilambda[,j] <- cilambda[,j]+sum(muhat*boot.residual[,j])
+            cilambda[,j] <- cilambda[,j]+muhat*boot.residual[,i]
           }
       }
     cilambda <- cilambda/(n.boot-1)
@@ -254,10 +260,10 @@ aim2 <- function(dat,nreps=1,n.grid=20,mult=2,seed=12345,outvar="mdev")
       fits[[i]] <- current.fit
       predictions[[i]] <- predictions
     }
- optimism <- corrected.lambda(dat=test.dat,lambdas=lambdas,list.object=aim2.list,model=fit.rf.training,predicted.values=predict.rf.test$aggregate,alphas=alphas,n.boot=10)
-#  Error.lambdas <- error.lambdas+optimism
+  optimism <- corrected.lambda(dat=test.dat,lambdas=lambdas,list.object=aim2.list,model=fit.rf.training,predicted.values=predict.rf.test$aggregate,alphas=alphas,n.boot=10)
+  Error.lambdas <- error.lambdas+optimism
 #  list(final.fit=final.fit,lambdas=lambdas,final.lambda=final.lambda)
-  list(lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,predictions=predictions,current.fit=current.fit,predicted.fit=predicted.fit,test.dat=test.dat)
+  list(lambdas=lambdas,Error.lambdas=Error.lambdas,error.lambdas=error.lambdas,optimism=optimism,fits=fits,predictions=predictions,current.fit=current.fit,predicted.fit=predicted.fit,test.dat=test.dat)
 }
 #final.fit is rpart tree chosen by optimal lambda
 #lambdas are the values of lambda from grid search
