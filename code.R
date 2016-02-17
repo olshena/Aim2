@@ -256,7 +256,7 @@ aim2 <- function(dat,nreps=1,n.grid=20,mult=2,seed=12345,outvar="mdev")
 #      final.fit <- rpart(outvar.aim2 ~ .,data = test.dat,parms=list(lambda=final.lambda,yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
       current.fit <- rpart(outvar.aim2 ~ .,data = test.dat,parms=list(lambda=lambdas[i],yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
       predicted.fit <- predict(object=current.fit,newdata=test.dat)
-      error.lambdas[i] <- mean((test.dat$outvar.aim2-predicted.fit)^2)
+      error.lambdas[i] <- sum((test.dat$outvar.aim2-predicted.fit)^2)
       fits[[i]] <- current.fit
       predictions[[i]] <- predictions
     }
@@ -273,3 +273,8 @@ housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
 colnames(housing.data) <- c("crim","zn","indus","chas","nox","rm","age","dis","rad","tax","ptratiob","b","lstat","mdev")
 temp <- aim2(dat=housing.data,nreps=1,n.grid=20,mult=2,seed=12345,outvar="mdev")
 
+pdf("housing_error.pdf")
+
+plot(temp$lambdas,temp$Error.lambdas,xlab="lambda",ylab="Optimism corrected error",main="Optmism corrected error vs lambda for housing data")
+
+dev.off()
