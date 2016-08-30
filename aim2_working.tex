@@ -2,55 +2,57 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage[margin=1in]{geometry}
+\usepackage{color}
 
 \begin{document}
 
 {\bf General set up for Aim 2b:}\\
 
-We assume that our training set has been split into two independent
-subsets, $(Z_{0i},W_{0i}), i = 1 \ldots n_0$ and a ``test set''
-$(Z_{1i}, W_{1i}), i = 1 \ldots n_1$. We first apply an aggregate
-learner (e.g., $partDSA_{RF}$) to the training set $(Z_{0i}, W_{0i}),
-i = 1 \ldots n_0$, generating the (black box) prediction rule,
-$\hat{m}(w)$; then, we forecast predicted outcomes in the test set
-$\widehat{Z}_{1i} = \hat{m}(W_{1i}), i = 1 \ldots n$.  Importantly:
-$\hat{m}(w)$ and $(Z_{1i}, W_{1i}), i = 1 \ldots n_1$ can be
-considered independent; in addition, the predictions
-$\widehat{Z}_{1i}, i = 1 \ldots n$ only utilize the $W_{1i}$s and not
-the $Z_{1i}$s. Importantly, $\widehat{Z}_{1i}, i = 1 \ldots n$ will
-not be used as covariates but rather in creating a target for
-shrinkage, thereby reducing variance.
 
-Starting with all of the data, under $L_2$ loss,
+We assume we have a training and a test set. From here forward the training set, $(Z_i,W_i), i = 1 \ldots n$, will be used for model building and the test set will only be used for prediction error when we have a final model. Starting with all of the training data, under $L_2$ loss,
 both \emph{partDSA} and CART would ordinarily seek to minimize
 \begin{equation} \label{eq: cart}
-\min\nolimits_{c_L} {\textstyle \sum\nolimits}_i I\{ W_{1i} \in Q_{L}(j,s) \} (Z_{1i}-c_L)^2
-+ \min\nolimits_{c_R} {\textstyle \sum\nolimits}_i
-I\{ W_{1i} \in Q_{R}(j,s) \}
-(Z_{1i}-c_R)^2
+	\min\nolimits_{c_L} {\textstyle \sum\nolimits}_i I\{ W_{i} \in Q_{L}(j,s) \} (Z_{i}-c_L)^2
+	+ \min\nolimits_{c_R} {\textstyle \sum\nolimits}_i
+	I\{ W_{i} \in Q_{R}(j,s) \}
+	(Z_{i}-c_R)^2
 \end{equation}
-over all variables $j$ and split points $s$,
-where
+over all variables $j$ and split points $s$, where
 $Q_{L}(j,s) = \{W|W_{j} \leq s\}$ and $Q_{R}(j,s) = \{W|W_{j} >
-s\}$ 
-%%%\citep[e.g.][\S 9.2]{HTFlearn}.
+s\}$.  %%%\citep[e.g.][\S 9.2]{HTFlearn}. 
 The $(j,s)$ combination minimizing \eqref{eq: cart} can be determined
-quickly; in CART, the ``best'' choice is used to divide the data into
-two groups (nodes) and the above splitting process is then repeated
-within each node. \emph{partDSA} proceeds similarly, making use of the
-above in the addition and substitution steps.  Strategies 1 \& 2 are
+quickly; in CART, the ``best'' choice is used to divide the root node into
+two daughter nodes and the above splitting process is then repeated
+within each daughter node. \emph{partDSA} proceeds similarly, making use of the
+above in the addition and substitution steps. 
+
+Here, we assume that our training set has been split into two independent
+subsets: a learning set, $(Z_{0i},W_{0i}), i = 1 \ldots n_0$; and, an evaluation set,
+$(Z_{1i}, W_{1i}), i = 1 \ldots n_1$. We first apply an aggregate
+learner (e.g., $partDSA_{RF}$) to the learning set $(Z_{0i}, W_{0i}),
+i = 1 \ldots n_0$, generating the (black box) prediction rule,
+$\hat{m}(w)$; then, we forecast predicted outcomes in the evaluation set
+$\widehat{Z}_{1i} = \hat{m}(W_{1i}), i = 1 \ldots n_1$.  Importantly:
+$\hat{m}(w)$ and $(Z_{1i}, W_{1i}), i = 1 \ldots n_1$ can be
+considered independent; in addition, the predictions
+$\widehat{Z}_{1i}, i = 1 \ldots n_1$ only utilize the $W_{1i}$s and not
+the $Z_{1i}$s. Importantly, $\widehat{Z}_{1i}, i = 1 \ldots n_1$ will
+not be used as covariates but rather in creating a target for
+shrinkage, thereby reducing variance. \textcolor{blue}{Should we consider a different strategy with $\widehat{Z}_{1i}$ as covariates?}
+
+ Strategies 1 \& 2 are
 discussed in the grant application and represent methods for modifying
 the loss function \eqref{eq: cart} used for split determination,
-making use of the $\widehat{Z}_{1i}$s to help guide splitting
-decisions. This document provides further details that underpin
-Strategy 2, which is described below.\\
+by making use of the $\widehat{Z}_{1i}$s to help guide splitting
+decisions. Here we provide further details that underpin
+Strategy 2.\\
 
 
 {\bf Strategy 2:} In addition to $\widehat{m}(\cdot)$, the
 ensemble building process provides
 (i) a measure of prediction error,
-$\hat{\sigma}^2_0,$ derived from $(Z_{0i}, W_{0i}), i = 1 \ldots n_0$;
-and, (ii) $B$ predicted outcomes for each $W_{1i}$, generating
+$\hat{\sigma}^2_0,$ derived from the learning set, $(Z_{0i}, W_{0i}), i = 1 \ldots n_0$;
+and, (ii) $B$ predicted outcomes for each evaluation set $W_{1i}$, generating
 both a predicted mean $\widehat{Z}_{1i}$ and measure of
 variance, $\hat{\gamma}_{i}.$ Strategy 2 leverages this
 information through penalization;
@@ -64,21 +66,28 @@ for $v \in \{L,R\}$, the two optimization problems in
     (c_v-\widehat{Z}_{1i})^2 \right]
 \end{equation}
 for $\alpha_i > 0,$ each having the weighted-average solution 
-\[
-\widehat{c}_{v,j,s}(\lambda) =
-r_{v,j,s}(\lambda) \bar{Z}_v(j,s) + (1-r_{v,j,s}(\lambda)) \hat{\bar{Z}}_{1v}(j,s),
-\]
+
+\begin{equation}
+	\label{chat}
+	\widehat{c}_{v,j,s}(\lambda) =
+	r_{v,j,s}(\lambda) \bar{Z}_{1v}(j,s) + (1-r_{v,j,s}(\lambda)) \hat{\bar{Z}}_{1v}(j,s),
+\end{equation}
+
 where $r_{v,j,s}(\lambda) = 1/(1 + \lambda \bar{\alpha}_{v,j,s}),$
-\[
-\hat{\bar{Z}}_{1v}(j,s) =
-\{ {\textstyle \sum\nolimits}_{W_{1i} \in Q_{v}(j,s)} \alpha_i  \hat{Z}_{1i} \}
-/ \{ {\textstyle \sum\nolimits}_{W_{1i} \in Q_{v}(j,s)} \alpha_i \}
-\]
+
+\begin{equation}
+	\hat{\bar{Z}}_{1v}(j,s) =
+	\{ {\textstyle \sum\nolimits}_iI(W_{1i} \in Q_{v}(j,s)) \alpha_i  \hat{Z}_{1i} \}
+	/ \{ {\textstyle \sum\nolimits}_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i \}
+\end{equation}
+
 and
-\[
-\bar{\alpha}_{v,j,s} = \{ \sum\nolimits_{W_{1i} \in Q_{v}(j,s)} \alpha_i \}
-/ \{ \sum_i I\{ W_{1i} \in Q_{v}(j,s) \} \}.
-\]
+
+\begin{equation}
+	\bar{\alpha}_{v,j,s} = \{ \sum\nolimits_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i \}
+	/ \{ \sum_i I\{ W_{1i} \in Q_{v}(j,s) \} \}.
+\end{equation}
+
 The choice $\alpha^{-1}_i = \mbox{var}( \hat{Z}_{1i} )$ is probably
 best from an efficiency perpsective; hence the choice of
 $\alpha_i = \hat{\gamma}^{-1}_{i}$ in the grant application text.
@@ -94,6 +103,8 @@ One issue to be decided whether the current version of strategy is the
 most appropriate formulation. Another key implementation issue is
 choosing $\lambda$. We discuss these in more detail towards the end.
 
+
+\textcolor{red}{For discussion - why did we drop the generalized cross-validation?}
 %One may use generalized cross-validation
 %(\emph{see}~ Hastie, Tibshirani, Friedman) to select $\lambda$ for the parent
 %node, fixing this value for determining the best split throughout the partition / tree
@@ -109,113 +120,6 @@ choosing $\lambda$. We discuss these in more detail towards the end.
 %Computationally efficient approximations can now be used, including estimating:
  %$\sigma^2_z$ via the parent-node sample variance or even $\hat{\sigma}^2_0$; and, $c_v$
 %via  $\bar{Z}_v(j,s).$ $\Diamond$
-
-\section{Important background calculations}
-\label{bkgrnd}
-\subsection{Background for estimating $c_L$ and $c_R$}
-\label{Est}
-Let $\omega_i, i \geq 1$ be nonnegative weights, where at least one is
-positive. Let $\alpha_i, i \geq 1$ and $A_i, i \geq 1$ respectively be
-sequences of positive and real-valued constants. Let $Z_i, i \geq 1$
-be a sequence of random variables. Finally let $\lambda > 0$ be given
-and consider the problem of minimizing
-\[
-Q(c) = {\textstyle \sum\nolimits}_i \omega_i \left[ (Z_{i}-c)^2 + \lambda \alpha_i (c-A_i)^2 \right]
-\]
-in $c$.  If we differentiate $Q(c)$ with respect to $c$, set $Q'(c) = 0$, and solve for $c$, we obtain
-\[
-c(\lambda) = \frac{\sum_i \omega_i Z_i}{\lambda \sum_i \omega_i \alpha_i + \sum_i \omega_i}
-+  \frac{ \lambda \sum_i \omega_i \alpha_i A_i}{\lambda \sum_i \omega_i \alpha_i + \sum_i \omega_i}.
-\]
-Doing a bit of algebra,
-\begin{equation}
-\label{clambda}
-c(\lambda) = r(\lambda) \frac{\sum_i \omega_i Z_i}{\sum_i \omega_i}
-+  (1-r(\lambda)) \frac{ \sum_i \omega_i \alpha_i A_i}{ \sum_i \omega_i \alpha_i }.
-\end{equation}
-where
-\begin{equation}
-\label{rlambda}
-r(\lambda) = \frac{\sum_i \omega_i}{\lambda \sum_i \omega_i \alpha_i + \sum_i \omega_i}  = 
-\frac{1}{(1 + \lambda \bar{\alpha})},
-\end{equation}
-and
-\begin{equation}
-\label{baralpha}
- \bar{\alpha} = \frac{\sum_i \omega_i \alpha_i}{\sum_i \omega_i}.
-\end{equation}
-Clearly, $r(\lambda) \in [0,1]$ and so this is just a shrinkage
-estimator that balances the observed weighted average (which we'd get
-if $\lambda = 0$)
-\[
- \frac{\sum_i \omega_i Z_i}{\sum_i \omega_i}
-\]
-with the $\alpha-$modified weighted average of the $A$s
-\[
-\frac{ \sum_i \omega_i \alpha_i A_i}{ \sum_i \omega_i \alpha_i }.
-\]
-(which we'd get as $\lambda \rightarrow \infty$).
-
-\subsection{Derivation of Within-Node Prediction Error}
-\label{PE}
-Now, let $\tilde{Z}$ be independent of $H = \{Z_i, i \geq 1\}.$ We can
-define the conditional prediction error using $c(\lambda)$ as
-\[
-CPE(\lambda) = E\left[ (\tilde Z - c(\lambda))^2 | H \right]
-\] 
-and the prediction error $PE(\lambda) = E_H\left[ CPE(\lambda)
-  \right]$ (here, $E_H$ denotes the expectation wrt distribution of
-$H$).  We would like to know what $\lambda$ minimizes
-$PE(\lambda)$. Note that $c(\lambda)$ is known given $H$ under the
-assumptions made at the beginning of the previous subsection.
-
-We can write
-\[
-(\tilde Z - c(\lambda))^2 = \tilde Z^2 - 2 \tilde Z c(\lambda) + [c(\lambda)]^2.
-\]
-Defining $\sigma^2_Z = var(\tilde Z)$ and $\mu_Z = E[\tilde Z]$ we have
-\[
-CPE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z c(\lambda) + [c(\lambda)]^2.
-\]
-Hence
-\[
-PE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z E_H[c(\lambda)] + E_H[[c(\lambda)]^2].
-\]
-Let $\mu_c(\lambda) = E_H[c(\lambda)] $ and $\sigma^2_c(\lambda) =
-var_H(c(\lambda))$; then, we can rewrite this last expression as
-\[
-PE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z \mu_c(\lambda) + \sigma^2_c(\lambda) + \mu^2_c(\lambda).
-\]
-Now, suppose $E[Z_i] = \delta$ for each $i$; then,
-\[
-\mu_c(\lambda) = r(\lambda) \delta+ K_1 (1-r(\lambda)).
-\]
-for
-\[
-K_1 =  \frac{ \sum_i \omega_i \alpha_i A_i}{ \sum_i \omega_i \alpha_i }.
-\]
-Similarly, if $var(Z_i) = \gamma$ for each $i,$ then
-\[
-var_c(\lambda) = r^2(\lambda) K_2 \gamma
-\]
-for 
-\[
-K_2 = \frac{ \sum_i \omega_i^2 }{[ \sum_i \omega_i]^2}
-\]
-As result we may write
-\[
-PE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z [r(\lambda) \delta + K_1 (1-r(\lambda)) ] + 
-r^2(\lambda) K_2 \gamma + 
-[r(\lambda) \delta + K_1 (1-r(\lambda))]^2
-\]
-In the special case where $\delta = \mu_Z$ and $\gamma = \sigma^2_Z$,
-differentiating $PE(\lambda) = 0$ with respect to $\lambda$ and
-solving $PE'(\lambda) = 0$ gives
-\begin{equation}
-\label{lam-opt}
-\lambda_0 = \frac{K_2 \sigma^2_Z}{ \bar{\alpha} (\mu_z - K_1)^2},
-\end{equation}
-where $\bar \alpha$ is given in \eqref{baralpha}.
 
 
 
@@ -472,6 +376,115 @@ The output form aim2 is
 \item lambdas are the values of lambda from grid search
 \item final.lambda is the optimal lambda chosen by 3-fold cross-validation
 \end{itemize}
+
+
+
+\section{Appendix: Important background calculations}
+\label{bkgrnd}
+\subsection{Background for estimating $c_L$ and $c_R$}
+\label{Est}
+Let $\omega_i, i \geq 1$ be nonnegative weights, where at least one is
+positive. Let $\alpha_i, i \geq 1$ and $A_i, i \geq 1$ respectively be
+sequences of positive and real-valued constants. Let $Z_i, i \geq 1$
+be a sequence of random variables. Finally let $\lambda > 0$ be given
+and consider the problem of minimizing
+\[
+Q(c) = {\textstyle \sum\nolimits}_i \omega_i \left[ (Z_{i}-c)^2 + \lambda \alpha_i (c-A_i)^2 \right]
+\]
+in $c$.  If we differentiate $Q(c)$ with respect to $c$, set $Q'(c) = 0$, and solve for $c$, we obtain
+\[
+c(\lambda) = \frac{\sum_i \omega_i Z_i}{\lambda \sum_i \omega_i \alpha_i + \sum_i \omega_i}
++  \frac{ \lambda \sum_i \omega_i \alpha_i A_i}{\lambda \sum_i \omega_i \alpha_i + \sum_i \omega_i}.
+\]
+Doing a bit of algebra,
+\begin{equation}
+\label{clambda}
+c(\lambda) = r(\lambda) \frac{\sum_i \omega_i Z_i}{\sum_i \omega_i}
++  (1-r(\lambda)) \frac{ \sum_i \omega_i \alpha_i A_i}{ \sum_i \omega_i \alpha_i }.
+\end{equation}
+where
+\begin{equation}
+\label{rlambda}
+r(\lambda) = \frac{\sum_i \omega_i}{\lambda \sum_i \omega_i \alpha_i + \sum_i \omega_i}  = 
+\frac{1}{(1 + \lambda \bar{\alpha})},
+\end{equation}
+and
+\begin{equation}
+\label{baralpha}
+ \bar{\alpha} = \frac{\sum_i \omega_i \alpha_i}{\sum_i \omega_i}.
+\end{equation}
+Clearly, $r(\lambda) \in [0,1]$ and so this is just a shrinkage
+estimator that balances the observed weighted average (which we'd get
+if $\lambda = 0$)
+\[
+ \frac{\sum_i \omega_i Z_i}{\sum_i \omega_i}
+\]
+with the $\alpha-$modified weighted average of the $A$s
+\[
+\frac{ \sum_i \omega_i \alpha_i A_i}{ \sum_i \omega_i \alpha_i }.
+\]
+(which we'd get as $\lambda \rightarrow \infty$).
+
+\subsection{Derivation of Within-Node Prediction Error}
+\label{PE}
+Now, let $\tilde{Z}$ be independent of $H = \{Z_i, i \geq 1\}.$ We can
+define the conditional prediction error using $c(\lambda)$ as
+\[
+CPE(\lambda) = E\left[ (\tilde Z - c(\lambda))^2 | H \right]
+\] 
+and the prediction error $PE(\lambda) = E_H\left[ CPE(\lambda)
+  \right]$ (here, $E_H$ denotes the expectation wrt distribution of
+$H$).  We would like to know what $\lambda$ minimizes
+$PE(\lambda)$. Note that $c(\lambda)$ is known given $H$ under the
+assumptions made at the beginning of the previous subsection.
+
+We can write
+\[
+(\tilde Z - c(\lambda))^2 = \tilde Z^2 - 2 \tilde Z c(\lambda) + [c(\lambda)]^2.
+\]
+Defining $\sigma^2_Z = var(\tilde Z)$ and $\mu_Z = E[\tilde Z]$ we have
+\[
+CPE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z c(\lambda) + [c(\lambda)]^2.
+\]
+Hence
+\[
+PE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z E_H[c(\lambda)] + E_H[[c(\lambda)]^2].
+\]
+Let $\mu_c(\lambda) = E_H[c(\lambda)] $ and $\sigma^2_c(\lambda) =
+var_H(c(\lambda))$; then, we can rewrite this last expression as
+\[
+PE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z \mu_c(\lambda) + \sigma^2_c(\lambda) + \mu^2_c(\lambda).
+\]
+Now, suppose $E[Z_i] = \delta$ for each $i$; then,
+\[
+\mu_c(\lambda) = r(\lambda) \delta+ K_1 (1-r(\lambda)).
+\]
+for
+\[
+K_1 =  \frac{ \sum_i \omega_i \alpha_i A_i}{ \sum_i \omega_i \alpha_i }.
+\]
+Similarly, if $var(Z_i) = \gamma$ for each $i,$ then
+\[
+var_c(\lambda) = r^2(\lambda) K_2 \gamma
+\]
+for 
+\[
+K_2 = \frac{ \sum_i \omega_i^2 }{[ \sum_i \omega_i]^2}
+\] \textcolor{red}{Rob - why is the denominator squared here? Isn't $\omega_i$ just an indicator function?}
+As result we may write
+\[
+PE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z [r(\lambda) \delta + K_1 (1-r(\lambda)) ] + 
+r^2(\lambda) K_2 \gamma + 
+[r(\lambda) \delta + K_1 (1-r(\lambda))]^2
+\]
+In the special case where $\delta = \mu_Z$ and $\gamma = \sigma^2_Z$,
+differentiating $PE(\lambda) = 0$ with respect to $\lambda$ and
+solving $PE'(\lambda) = 0$ gives
+\begin{equation}
+\label{lam-opt}
+\lambda_0 = \frac{K_2 \sigma^2_Z}{ \bar{\alpha} (\mu_z - K_1)^2},
+\end{equation}
+where $\bar \alpha$ is given in \eqref{baralpha}.
 
 The last three lines of code.R shows how to run aim2 on the Boston
 housing data.

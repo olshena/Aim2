@@ -218,7 +218,7 @@ corrected.lambda <- function(dat,lambdas,list.object,model,predicted.values,alph
 #seed fixes the random number generator for reproducibility
 #outvar is the name of the outcome variable in the fitting
                              
-aim2 <- function(dat,nreps=1,n.grid=20,mult=2,seed=12345,outvar="mdev")
+aim2 <- function(dat,nreps=1,n.grid=20,mult=2,seed=12345,outvar="mdev")  ### AMM - Should this be hardcoded with mdev? As is specific to housing data
 {
 #Functions that go into penalized fitting method  
   aim2.list <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, summary=aim2.summary, text=aim2.text)
