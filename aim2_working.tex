@@ -6,7 +6,7 @@
 
 \begin{document}
 
-{\bf General set up for Aim 2b:}\\
+\section{General set up for Aim 2b:}
 
 
 We assume we have a training and a test set. From here forward the training set, $(Z_i,W_i), i = 1 \ldots n$, will be used for model building and the test set will only be used for prediction error when we have a final model. Starting with all of the training data, under $L_2$ loss,
@@ -31,12 +31,12 @@ subsets: a learning set, $(Z_{0i},W_{0i}), i = 1 \ldots n_0$; and, an evaluation
 $(Z_{1i}, W_{1i}), i = 1 \ldots n_1$. We first apply an aggregate
 learner (e.g., $partDSA_{RF}$) to the learning set $(Z_{0i}, W_{0i}),
 i = 1 \ldots n_0$, generating the (black box) prediction rule,
-$\hat{m}(w)$; then, we forecast predicted outcomes in the evaluation set
+$\hat{m}(w)$; then, we calculate predicted outcomes based on the covariates in the evaluation set,
 $\widehat{Z}_{1i} = \hat{m}(W_{1i}), i = 1 \ldots n_1$.  Importantly:
 $\hat{m}(w)$ and $(Z_{1i}, W_{1i}), i = 1 \ldots n_1$ can be
 considered independent; in addition, the predictions
-$\widehat{Z}_{1i}, i = 1 \ldots n_1$ only utilize the $W_{1i}$s and not
-the $Z_{1i}$s. Importantly, $\widehat{Z}_{1i}, i = 1 \ldots n_1$ will
+$\widehat{Z}_{1i}, i = 1 \ldots n_1$, only utilize the $W_{1i}$s and not
+the $Z_{1i}$s. Importantly, $\widehat{Z}_{1i}, i = 1 \ldots n_1$, will
 not be used as covariates but rather in creating a target for
 shrinkage, thereby reducing variance. \textcolor{blue}{Should we consider a different strategy with $\widehat{Z}_{1i}$ as covariates?}
 
@@ -45,15 +45,15 @@ discussed in the grant application and represent methods for modifying
 the loss function \eqref{eq: cart} used for split determination,
 by making use of the $\widehat{Z}_{1i}$s to help guide splitting
 decisions. Here we provide further details that underpin
-Strategy 2.\\
+Strategy 2.
 
 
-{\bf Strategy 2:} In addition to $\widehat{m}(\cdot)$, the
+\subsection{Strategy 2} In addition to $\widehat{m}(\cdot)$, the
 ensemble building process provides
 (i) a measure of prediction error,
 $\hat{\sigma}^2_0,$ derived from the learning set, $(Z_{0i}, W_{0i}), i = 1 \ldots n_0$;
 and, (ii) $B$ predicted outcomes for each evaluation set $W_{1i}$, generating
-both a predicted mean $\widehat{Z}_{1i}$ and measure of
+both a predicted mean, $\widehat{Z}_{1i}$, and measure of
 variance, $\hat{\gamma}_{i}.$ Strategy 2 leverages this
 information through penalization;
 the crux of this proposal involves replacing,
@@ -73,8 +73,16 @@ for $\alpha_i > 0,$ each having the weighted-average solution
 	r_{v,j,s}(\lambda) \bar{Z}_{1v}(j,s) + (1-r_{v,j,s}(\lambda)) \hat{\bar{Z}}_{1v}(j,s),
 \end{equation}
 
-where $r_{v,j,s}(\lambda) = 1/(1 + \lambda \bar{\alpha}_{v,j,s}),$
+where:
 
+\begin{equation}
+	r_{v,j,s}(\lambda) = 1/(1 + \lambda \bar{\alpha}_{v,j,s}),
+\end{equation}
+
+\begin{equation}
+	{\bar{Z}}_{1v}(j,s) = n^{-1}_{v,j,s} 
+	 {\textstyle \sum\nolimits}_iI(W_{1i} \in Q_{v}(j,s)) {Z}_{1i} ,
+\end{equation} 
 \begin{equation}
 	\hat{\bar{Z}}_{1v}(j,s) =
 	\{ {\textstyle \sum\nolimits}_iI(W_{1i} \in Q_{v}(j,s)) \alpha_i  \hat{Z}_{1i} \}
@@ -84,24 +92,47 @@ where $r_{v,j,s}(\lambda) = 1/(1 + \lambda \bar{\alpha}_{v,j,s}),$
 and
 
 \begin{equation}
-	\bar{\alpha}_{v,j,s} = \{ \sum\nolimits_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i \}
-	/ \{ \sum_i I\{ W_{1i} \in Q_{v}(j,s) \} \}.
+	\bar{\alpha}_{v,j,s} = n^{-1}_{v,j,s} \sum_i I(W_{1i} \in Q_{v}(j,s))
+\alpha_i
 \end{equation}
+where $n_{v,j,s} =  \sum_i I( W_{1i} \in Q_{v}(j,s) ).$
+
 
 The choice $\alpha^{-1}_i = \mbox{var}( \hat{Z}_{1i} )$ is probably
 best from an efficiency perpsective; hence the choice of
-$\alpha_i = \hat{\gamma}^{-1}_{i}$ in the grant application text.
-
-Note that, given $\bar{\alpha}_{j,v,s},$  more weight is placed on
+$\alpha_i = \hat{\gamma}^{-1}_{i}$ in the grant application text. Note that, given $\bar{\alpha}_{j,v,s},$  more weight is placed on
 $\hat{\bar{Z}}_{1v}(j,s)$ when $\lambda$ is larger; similarly, 
 given $\lambda$, more weight is placed on
 $\hat{\bar{Z}}_{1v}(j,s)$ when $\bar{\alpha}_{j,v,s}$ is larger.
 Both make sense in shrinking the parameter estimate
-towards this weighted mean function.
+towards this weighted mean function.\\
 
-One issue to be decided whether the current version of strategy is the
-most appropriate formulation. Another key implementation issue is
-choosing $\lambda$. We discuss these in more detail towards the end.
+To decide: 
+\begin{enumerate}
+	\item Is this the most appropriate formulation? 
+	\item How to choose $\lambda$.
+\end{enumerate}
+
+
+
+\subsubsection{Within-Node choice of $\lambda$}
+Applying the results of Section \ref{PE} and assuming all expectation
+calculations are conditional on $W_{1i}, i \geq 1$ it can be shown that
+\[
+K_2 = n^{-1}_{v,j,s}
+\]
+and
+\[
+K_1 = \hat{\bar{Z}}_{1v}(j,s).
+\]
+Assuming that $E(Z_i) = \mu_Z$ and $var(Z_i) = \sigma^2_Z$ when $I(
+W_{1i} \in Q_{v}(j,s) ) =1$ (i.e., constant mean and variance within a
+node), the ``best'' within-node choice of $\lambda$ via
+\eqref{lam-opt} becomes
+\begin{equation}
+\lambda_{opt} = \frac{n^{-1}_{v,j,s} \sigma^2_Z}{ \bar{\alpha}_{v,j,s} (\mu_z -  \hat{\bar{Z}}_{1v}(j,s))^2}.
+\end{equation}
+
 
 
 \textcolor{red}{For discussion - why did we drop the generalized cross-validation?}
@@ -123,50 +154,10 @@ choosing $\lambda$. We discuss these in more detail towards the end.
 
 
 
-\section{First application of results to Strategy 2}.
-
-To connect the notation of the Aim2b set-up and the notation of
-Section \ref{bkgrnd}, let $\omega_i = I\{ W_{1i} \in Q_{v}(j,s) \},$
-$Z_i = Z_{1i}$ and $A_i = \hat Z_{1i}$. Then, the formulas
-\eqref{clambda}-\eqref{baralpha} of Section \ref{Est} give
- \[
-\widehat{c}_{v,j,s}(\lambda) =
-r_{v,j,s}(\lambda) \bar{Z}_v(j,s) + (1-r_{v,j,s}(\lambda)) \hat{\bar{Z}}_{1v}(j,s),
-\]
-where $r_{v,j,s}(\lambda) = 1/(1 + \lambda \bar{\alpha}_{v,j,s}),$
-\[
-\hat{\bar{Z}}_{1v}(j,s) =
-\{ \sum_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i  \hat{Z}_{1i} \}
-/ \{ \sum_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i \}
-\]
-and
-\[
-\bar{\alpha}_{v,j,s} = n^{-1}_{v,j,s} \sum_i I(W_{1i} \in Q_{v}(j,s))
-\alpha_i
-\]
-where $n_{v,j,s} =  \sum_i I( W_{1i} \in Q_{v}(j,s) ).$
-
-Applying the results of Section \ref{PE} and assuming all expectation
-calculations are conditional on $W_{1i}, i \geq 1$ it can be shown that
-\[
-K_2 = n^{-1}_{v,j,s}
-\]
-and
-\[
-K_1 = \hat{\bar{Z}}_{1v}(j,s).
-\]
-Assuming that $E(Z_i) = \mu_Z$ and $var(Z_i) = \sigma^2_Z$ when $I(
-W_{1i} \in Q_{v}(j,s) ) =1$ (i.e., constant mean and variance within a
-node), the ``best'' within-node choice of $\lambda$ via
-\eqref{lam-opt} becomes
-\begin{equation}
-\lambda_{opt} = \frac{n^{-1}_{v,j,s} \sigma^2_Z}{ \bar{\alpha}_{v,j,s} (\mu_z -  \hat{\bar{Z}}_{1v}(j,s))^2}.
-\end{equation}
 
 
 
-
-\section{Alternative view of Strategy 2}.
+\subsection{Alternative view of Strategy 2}.
 
 Let $\omega_i = I\{ W_{1i} \in Q_{v}(j,s) \},$ $Z_i = Z_{1i}$ and $A_i
 = A_{v,j,s} I\{ W_{1i} \in Q_{v}(j,s) \}$ (i.e., $A_{v,j,s}$ doesn't
@@ -376,7 +367,8 @@ The output form aim2 is
 \item lambdas are the values of lambda from grid search
 \item final.lambda is the optimal lambda chosen by 3-fold cross-validation
 \end{itemize}
-
+The last three lines of code.R shows how to run aim2 on the Boston
+housing data.
 
 
 \section{Appendix: Important background calculations}
@@ -486,8 +478,14 @@ solving $PE'(\lambda) = 0$ gives
 \end{equation}
 where $\bar \alpha$ is given in \eqref{baralpha}.
 
-The last three lines of code.R shows how to run aim2 on the Boston
-housing data.
+
+
+To connect the notation of the Aim2b set-up and the notation of
+Section \ref{bkgrnd}, let $\omega_i = I\{ W_{1i} \in Q_{v}(j,s) \},$
+$Z_i = Z_{1i}$ and $A_i = \hat Z_{1i}$. 
+
+
+
 
 \end{document}
 
