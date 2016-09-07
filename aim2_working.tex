@@ -37,7 +37,7 @@ considered independent; in addition, the predictions
 $\widehat{Z}_{1i}, i = 1 \ldots n_1$, only utilize the $W_{1i}$s and not
 the $Z_{1i}$s. Importantly, $\widehat{Z}_{1i}, i = 1 \ldots n_1$, will
 not be used as covariates but rather in creating a target for
-shrinkage, thereby reducing variance. \textcolor{blue}{Should we consider a different strategy with $\widehat{Z}_{1i}$ as covariates?}
+shrinkage, thereby reducing variance.
 
  Strategies 1 \& 2 are
 discussed in the grant application and represent methods for modifying
@@ -147,7 +147,7 @@ average predicted value.
 
 
 
-\textcolor{red}{For discussion - why did we drop the generalized cross-validation?}
+%\textcolor{red}{For discussion - why did we drop the generalized cross-validation?}
 %One may use generalized cross-validation
 %(\emph{see}~ Hastie, Tibshirani, Friedman) to select $\lambda$ for the parent
 %node, fixing this value for determining the best split throughout the partition / tree
@@ -174,16 +174,16 @@ average predicted value.
 Instead of using a within-node selection of $\lambda$, we can implement a global
 method for picking $\lambda$ by minimizing the prediction error over a grid of possible values for $\lambda$. 
 Suppose that $\hat{\cal M}(W,\lambda)$ denotes the final prediction
-rule obtained using the data $(\textcolor{red}{Z, W}, \hat Z_1)$ -- meaning, this is obtained from our proposed
-penalized loss procedure for fixed $\lambda.$ \textcolor{blue}{Note - I replaced $\mu$ with $\cal M$ as we were using $\mu$ for mean of $Z_i$s and made the data the entire training set plus the predicted outcome for the evaluation set.}
+rule obtained using the data $(Z, W)$ -- meaning, this is obtained from our proposed
+penalized loss procedure for fixed $\lambda.$ \textcolor{blue}{Note - I replaced $\mu$ with $\cal M$ as we were using $\mu$ for mean of $Z_i$s and made the data the entire training set  - need to fix throughout this subsection.}
 Let ${\cal N}_1(\lambda), \ldots, {\cal N}_{K(\lambda)}(\lambda)$ be the
 partitions obtained in the final structure built with fixed $\lambda$; 
 then, we know
 \[
-\hat{\cal M}(W,\lambda) = \sum_{k=1}^{K(\lambda)} I\{W_{1i} \in {\cal
+\hat{\cal M}(W_{1i},\lambda) = \sum_{k=1}^{K(\lambda)} I\{W_{1i} \in {\cal
   N}_k(\lambda)\} \hat c_k(\lambda)
 \]
-(piecewise constant predictor within each partition/node). \textcolor{red}{We're missing notation to specify individual} Here,
+(piecewise constant predictor within each partition/node).  Here,
  \[
 \hat{c}_{k}(\lambda) =
 r_{k}(\lambda) \bar{Z}_{1j} + (1-r_k(\lambda)) \hat{\bar{Z}}_{1k}
@@ -245,7 +245,7 @@ where
 \end{equation}
 For generating boostrap samples,  we can use $\hat m(\cdot)$ in place of $\hat {\cal M}(W_{1i},\lambda)$, as
 bootstrapping does not depend on $\lambda$ and this estimation only needs to be done
-once. \textcolor{blue}{for clarity, $\hat m(\cdot)$  will only be used for the parametric bootstrap and not below for the new  $\hat {\cal M}^*(w,\lambda)$?}
+once. 
 
 For each $b = 1,\ldots,B$ we run our code on $\{(Z^*_{1i}(b), W_{1i}, \hat Z_{1i}),
 i=1,\ldots,n_1\}$, to obtain a new $\hat {\cal M}^*(w,\lambda)$.  We can
@@ -403,7 +403,7 @@ var_c(\lambda) = r^2(\lambda) K_2 \gamma
 for 
 \[
 K_2 = \frac{ \sum_i \omega_i^2 }{[ \sum_i \omega_i]^2}
-\] \textcolor{red}{Rob - why is the denominator squared here? Isn't $\omega_i$ just an indicator function? Or is this for expansion in the future when $\omega_i$ can be another function?}
+\] 
 As result we may write
 \[
 PE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z [r(\lambda) \delta + K_1 (1-r(\lambda)) ] + 
