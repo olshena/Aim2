@@ -225,7 +225,8 @@ aim2 <- function(dat,nreps=1,n.grid=20,mult=2,seed=12345,outvar="mdev",prop.lear
   set.seed(seed)
   n <- nrow(dat)
 #Identify outcome variable
-  which.outcome <- which(colnames(dat)==outvar)
+    which.outcome <- which(colnames(dat)==outvar)
+    if(length(which.outcome)==0) stop(paste("No variable found labeled as",outvar))
   colnames(dat)[which.outcome] <- "outvar.aim2"
 #Make training and test data
   ntrain <- round(prop.learning*n)
@@ -272,6 +273,9 @@ aim2 <- function(dat,nreps=1,n.grid=20,mult=2,seed=12345,outvar="mdev",prop.lear
 housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
 colnames(housing.data) <- c("crim","zn","indus","chas","nox","rm","age","dis","rad","tax","ptratiob","b","lstat","mdev")
 temp <- aim2(dat=housing.data,nreps=1,n.grid=20,mult=2,seed=12345,outvar="mdev")
+
+write(temp$lambdas,"temp_lambdas.txt",ncol=1)
+write(temp$Error.lambdas,"temp_Error_lambdas.txt",ncol=1)
 
 pdf("housing_error.pdf")
 
