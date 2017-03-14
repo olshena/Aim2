@@ -5,12 +5,11 @@ library(rpart.plot)
 
 ## @knitr kaim2
                             
-aim2 <- function(dat,nreps=1,n.grid=20,mult=2,seed=12345,outvar="Y")  
+aim2 <- function(dat,nreps=1,n.grid=20,mult=2,outvar="Y",prop.learning=0.5)  
 {
   #Functions that go into penalized fitting method  
   aim2.list <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, 
                     summary=aim2.summary, text=aim2.text)
-  set.seed(seed)
   n <- nrow(dat)
   
   #Identify outcome variable   --- this is redundant with functions statement and should be changed
@@ -19,7 +18,7 @@ aim2 <- function(dat,nreps=1,n.grid=20,mult=2,seed=12345,outvar="Y")
   
   #Split training set into learning and evaluation sets - now based on 50/50 split
   # later look at different alternatives
-  nlearn <- round(n/2)
+  nlearn <- round(prop.learning*n)
   neval <- n-nlearn
   samp <- sample(1:n,n,replace=FALSE)
   wlearn <- sort(samp[1:nlearn])

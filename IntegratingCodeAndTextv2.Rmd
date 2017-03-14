@@ -337,10 +337,11 @@ see if the loop can be removed.
 For an example, we have the Boston housing data. In the following block of text we read in the data, rename the columns, run the algorithm (via `aim2` function) and then plot the errors. 
 
 ```{r}
+set.seed(12345)
 housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
 colnames(housing.data) <- c("crim","zn","indus","chas","nox","rm","age","dis","rad",
                             "tax","ptratiob","b","lstat","mdev")
-temp <- aim2(dat=housing.data,nreps=1,n.grid=20,mult=2,seed=12345,outvar="mdev")
+temp <- aim2(dat=housing.data,nreps=1,n.grid=20,mult=2,outvar="mdev",prop.learning=0.5)
 
   plot(temp$lambdas,temp$Error.lambdas,xlab="lambda",ylab="Optimism corrected error",
        main="Optimism corrected error vs. lambda for housing data")

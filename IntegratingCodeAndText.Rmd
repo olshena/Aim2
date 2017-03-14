@@ -1,7 +1,7 @@
 ---
 title: "Integrating the code and text"
 author: "A, A, & R"
-date: "September 20, 2016"
+date:  '`r format(Sys.time(), "%d %B, %Y")`'
 output: 
   pdf_document:
     toc: true
@@ -375,8 +375,6 @@ At the end of this function, `optimisim` is as written in equation \eqref{optimi
 
 This function is called by `aim2` to get the optimism correction for the prediction error. This implements the parametric boostrap and evaluates equations \eqref{sigma_z1_calM} - \eqref{eq: barzstar} and returns the righthand side of \eqref{optcor}.
 
-**This function assumes that the last column of the data is the outcome -- this needs to be fixed**
-**Two places: dat[,p] and new.dat[,p] <- boot.dat[,b]**
 ```{r}
 corrected.lambda <- function(dat,lambdas,list.object,model,predicted.values,alphas,n.boot=10)
   {
@@ -385,7 +383,7 @@ corrected.lambda <- function(dat,lambdas,list.object,model,predicted.values,alph
     n.lambdas <- length(lambdas)
     cilambda <- matrix(0,n1,n.lambdas)
     boot.dat <- boot.residual <- matrix(NA,n1,n.boot)
-    sigmahat <- sqrt(sum((dat[,p]-predicted.values)^2)/n1) #SD for \hat{\sigma^2_{Z_1-\bigM}}
+    sigmahat <- sqrt(sum((dat$outvar.aim2-predicted.values)^2)/n1) #SD for \hat{\sigma^2_{Z_1-\bigM}}
 
     for(b in 1:n.boot) boot.dat[,b] <- rnorm(n1,mean=predicted.values,sd=sigmahat)#bootstrap samples
     boot.mean <- matrix(apply(boot.dat,1,mean))  # \bar{Z^*_{1i}}
@@ -393,7 +391,7 @@ corrected.lambda <- function(dat,lambdas,list.object,model,predicted.values,alph
     for(b in 1:n.boot)
       {
         new.dat <- dat
-        new.dat[,p] <- boot.dat[,b] 
+        new.dat$outvar.aim2 <- boot.dat[,b] 
         for(j in 1:n.lambdas)
           {
             final.fit <- rpart(outvar.aim2 ~ .,data = new.dat,
@@ -540,7 +538,7 @@ According to this plot, we would select the lambda equal to
 
 ```{r echo=FALSE, message = FALSE}
   lambda.num<-which(temp$Error.lambdas==min(temp$Error.lambdas))
-  prp(temp$fits[[6]])
+  prp(temp$fits[[ lambda.num]])
 ```
 
 
@@ -720,7 +718,7 @@ average predicted value.
 #To-Do List
 
 For the short term  
-1. Decide if want to use alternate shrinkage target or original  (the initial lambda is chosen based on root node with the alternate shrinkage target)
-2. Update code so last column of data is not assumed to be outcome
+1. Decide if want to use alternate shrinkage target or original  (the initial lambda is chosen based on root node with the alternate shrinkage target)  
+2. Update code so last column of data is not assumed to be outcome  
 3. Currently - can only have x as continuous - in aim2.split option for having categorical variables has not been coded.
 
