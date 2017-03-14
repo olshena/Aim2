@@ -9,7 +9,7 @@ output:
 ---
 ```{r echo=FALSE}
 library(knitr)
-read_chunk("IntegratingCodeAndText.R")
+read_chunk("IntegratingCodeAndText_postAMM.R")
 ```
 
 # General set up for Aim 2b: 
@@ -353,8 +353,28 @@ According to this plot, we would select the lambda equal to
 ```{r echo=FALSE, message = FALSE}
   lambda.num<-which(temp$Error.lambdas==min(temp$Error.lambdas))
   prp(temp$fits[[ lambda.num]])
+   test.dat.predicted.fit.resub<-predict(object=temp$fits[[lambda.num]],newdata=housing.data)
+  error.test.dat.resub <- sum((housing.data$mdev-test.dat.predicted.fit.resub)^2)
 ```
 
+
+The resubstitution estimate of prediction error is `r  round(error.test.dat.resub,3)`.   
+
+
+If we just ran a rpart tree:
+
+```{r}
+
+summary(justRpart<-rpart(mdev ~ .,data = housing.data)  )
+#prp(justRpart)
+min.CP<-justRpart$cptable[which(justRpart$cptable[,4]==min(justRpart$cptable[,4])),1]
+justRpartpruned<-prune(justRpart,cp=min.CP)
+prp(justRpartpruned)
+   rpart.test.dat.predicted.fit.resub<-predict(object=justRpartpruned,newdata=housing.data)
+  rpart.error.test.dat.resub <- sum((housing.data$mdev-rpart.test.dat.predicted.fit.resub)^2)
+```
+
+With prediction error `r round(rpart.error.test.dat.resub,3)`
 
 \section{Appendix: Important background calculations}
 **Make sure learning/test is updated and that ${\cal M}$ is used for final model**

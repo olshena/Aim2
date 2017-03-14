@@ -47,17 +47,23 @@ aim2 <- function(dat,nreps=1,n.grid=20,mult=2,outvar="Y",prop.learning=0.5)
   error.lambdas <- rep(0,length(lambdas)) 
   fits <- vector("list",n.lambdas)
   predictions <- vector("list",n.lambdas)
-  
+  print("almost there")
   # To get the err(\lambda) - uncorrected - currently equation 11
   for(j in 1:n.lambdas)
     {
+      print(lambdas[j])
       current.fit <- rpart(outvar.aim2 ~ .,data = evaluation.dat,
                            parms=list(lambda=lambdas[j],
                            yhat=predict.rf.evaluation$aggregate,
-                           alpha=alphas),method=aim2.list)   
-      predicted.fit <- predict(object=current.fit,newdata=evaluation.dat)
+                           alpha=alphas),method=aim2.list)  
+      xgroup <- rep(1:10, length = nrow(evaluation.dat))
+      xfit <- xpred.rpart(current.fit,xgroup)
+      xerror <- colMeans((xfit - evaluation.dat$outvar.aim2)^2)
+      min.CP<-current.fit$cptable[which(xerror==min(xerror)),1]
+      current.fit.pruned<-prune(current.fit,cp=min.CP)
+      predicted.fit <- predict(object=current.fit.pruned,newdata=evaluation.dat)
       error.lambdas[j] <- sum((evaluation.dat$outvar.aim2-predicted.fit)^2)
-      fits[[j]] <- current.fit
+      fits[[j]] <- current.fit.pruned
       predictions[[j]] <- predicted.fit
   }
   
@@ -99,7 +105,13 @@ corrected.lambda <- function(dat,lambdas,list.object,model,predicted.values,alph
                                parms=list(lambda=lambdas[j],
                                yhat=predicted.values,alpha=alphas),
                                method=list.object)
-            bigMhat <- predict(object=final.fit,newdata=new.dat)
+            xgroup <- rep(1:10, length = nrow(new.dat))
+            xfit <- xpred.rpart(final.fit,xgroup)
+            xerror <- colMeans((xfit - new.dat$outvar.aim2)^2)
+            min.CP<-final.fit$cptable[which(xerror==min(xerror)),1]
+            final.fit.pruned<-prune(final.fit,cp=min.CP)
+            
+            bigMhat <- predict(object=final.fit.pruned,newdata=new.dat)
             cilambda[,j] <- cilambda[,j]+bigMhat*boot.residual[,b]
           }
       }
@@ -206,7 +218,7 @@ composite.rpart=function(dat,n.grid=20,mult=2,outvar="Y",prop.learning=0.5)
   which.outcome <- which(colnames(dat)==outvar)
   colnames(dat)[which.outcome] <- "outvar.aim2"	
 
-  #Split into learning and evaluation sets - now based on 50/50 split
+  #Split into learning and evaluation sets 
   nlearn <- round(prop.learning*n)
   neval <- n-nlearn
   samp <- sample(1:n,n,replace=FALSE)
@@ -231,21 +243,23 @@ composite.rpart=function(dat,n.grid=20,mult=2,outvar="Y",prop.learning=0.5)
   error.lambdas <- rep(0,length(lambdas)) 
   fits <- vector("list",n.lambdas)
   predictions <- vector("list",n.lambdas)
-
+  use.dat<-evaluation.dat
   # To get the err(\lambda) - uncorrected - currently equation 11
   for(j in 1:n.lambdas)
     {
       new.lambda <- lambdas[j]
       print(new.lambda)
-      new.denom <- (1+new.lambda)
+      new.denom <- (1+alphas*new.lambda)
       print(new.denom)
       ri <- 1/new.denom
-      ci <- ri*dat$outvar.aim2 + (1-ri)*zbarhat
-      new.dat <- dat
-      new.dat$outvar.aim2 <- ci
-      current.fit <- rpart(outvar.aim2 ~ .,data = new.dat)
-      predicted.fit <- predict(object=current.fit, data=new.dat)
-      error.lambdas[j] <- sum((dat$outvar.aim2-predicted.fit)^2)
+      ci <- ri*use.dat$outvar.aim2 + (1-ri)*predict.rf.evaluation$aggregate
+      new.use.dat <- use.dat
+      new.use.dat$outvar.aim2 <- ci
+      current.fit <- rpart(outvar.aim2 ~ .,data = new.use.dat)
+      min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1]
+      current.fit.pruned<-prune(current.fit,cp=min.CP)
+      predicted.fit <- predict(object=current.fit.pruned, data=new.use.dat)
+      error.lambdas[j] <- sum((new.use.dat$outvar.aim2-predicted.fit)^2)
       fits[[j]] <- current.fit
       predictions[[j]] <- predicted.fit
     }
@@ -259,5 +273,6 @@ colnames(housing.data) <- c("crim","zn","indus","chas","nox","rm","age","dis","r
                             "tax","ptratiob","b","lstat","mdev")
 set.seed(12345)			    
 temp <- composite.rpart(dat=housing.data,n.grid=20,outvar="mdev")
-
+plot(temp$lambdas,temp$Error.lambdas,xlab="lambda",ylab="Optimism corrected error",
+     main="Optimism corrected error vs. lambda for housing data")
 
