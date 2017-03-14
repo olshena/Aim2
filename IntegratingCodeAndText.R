@@ -198,5 +198,66 @@ aim2.text <- function(yval, dev, wt, ylevel, digits, n, use.n )
   else paste(formatg(yval,digits))
 }
 
+## @knitr kcomposite
+
+composite.rpart=function(dat,n.grid=20,mult=2,outvar="Y",prop.learning=0.5)
+{
+  n <- nrow(dat)
+  which.outcome <- which(colnames(dat)==outvar)
+  colnames(dat)[which.outcome] <- "outvar.aim2"	
+
+  #Split into learning and evaluation sets - now based on 50/50 split
+  nlearn <- round(prop.learning*n)
+  neval <- n-nlearn
+  samp <- sample(1:n,n,replace=FALSE)
+  wlearn <- sort(samp[1:nlearn])
+  weval <- sort(samp[(nlearn+1):n])
+  learning.dat <- dat[wlearn,]
+  evaluation.dat <- dat[weval,]
+
+  fit.rf.learning <- randomForest(outvar.aim2 ~ .,data = learning.dat) # Fit RF with learning set
+  predict.rf.evaluation <- predict(fit.rf.learning,newdata=evaluation.dat,predict.all=TRUE) #  $\widehat{Z}_{1i}$
+  mean.evaluation <- mean(evaluation.dat$outvar.aim2) # $\mu_{Z_1}$
+  var.evaluation <- var(evaluation.dat$outvar.aim2) # $\sigma^2_{Z_1}$
+  zbarhat <- mean(predict.rf.evaluation$aggregate) # $ \bar{\hat{Z_1}}$ 
+  var.z1s <-  apply(predict.rf.evaluation$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
+  alphas <- 1/var.z1s # $\alpha_i$
+  alphabar <- mean(alphas) # \bar{\alpha}$
+  lambda <- var.evaluation/(neval*alphabar*(mean.evaluation-zbarhat)^2) #with-in node 
+                                                                        #choice of \lambda
+  print(paste("lambda =",lambda)) 									
+  lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas
+  n.lambdas <- length(lambdas) #length of list
+  error.lambdas <- rep(0,length(lambdas)) 
+  fits <- vector("list",n.lambdas)
+  predictions <- vector("list",n.lambdas)
+
+  # To get the err(\lambda) - uncorrected - currently equation 11
+  for(j in 1:n.lambdas)
+    {
+      new.lambda <- lambdas[j]
+      print(new.lambda)
+      new.denom <- (1+new.lambda)
+      print(new.denom)
+      ri <- 1/new.denom
+      ci <- ri*dat$outvar.aim2 + (1-ri)*zbarhat
+      new.dat <- dat
+      new.dat$outvar.aim2 <- ci
+      current.fit <- rpart(outvar.aim2 ~ .,data = new.dat)
+      predicted.fit <- predict(object=current.fit, data=new.dat)
+      error.lambdas[j] <- sum((dat$outvar.aim2-predicted.fit)^2)
+      fits[[j]] <- current.fit
+      predictions[[j]] <- predicted.fit
+    }
+
+  list(lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,predictions=predictions)
+}
+
+
+housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
+colnames(housing.data) <- c("crim","zn","indus","chas","nox","rm","age","dis","rad",
+                            "tax","ptratiob","b","lstat","mdev")
+set.seed(12345)			    
+temp <- composite.rpart(dat=housing.data,n.grid=20,outvar="mdev")
 
 
