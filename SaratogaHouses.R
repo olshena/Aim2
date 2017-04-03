@@ -53,4 +53,8 @@ hist(res2.test)
 error.test <- sqrt(sum(res.test^2)/n.test)
 error2.test <- sqrt(sum(res2.test^2)/n.test)
 
+fit3 <- composite.rpart.thirds(dat=sdat.train,n.grid=20,mult=2,outvar="price")
+predict3.test <- predict(fit3$current.fit.pruned,newdata=sdat.test)
 
+res3.test <- sdat.test$price-predict3.test
+error3.test <- sqrt(sum(res3.test^2)/n.test)

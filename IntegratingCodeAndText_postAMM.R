@@ -268,11 +268,85 @@ composite.rpart=function(dat,n.grid=20,mult=2,outvar="Y",prop.learning=0.5)
 }
 
 
-housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
-colnames(housing.data) <- c("crim","zn","indus","chas","nox","rm","age","dis","rad",
-                            "tax","ptratiob","b","lstat","mdev")
-set.seed(12345)			    
-temp <- composite.rpart(dat=housing.data,n.grid=20,outvar="mdev")
-plot(temp$lambdas,temp$Error.lambdas,xlab="lambda",ylab="Optimism corrected error",
-     main="Optimism corrected error vs. lambda for housing data")
+#housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
+#colnames(housing.data) <- c("crim","zn","indus","chas","nox","rm","age","dis","rad",
+#                            "tax","ptratiob","b","lstat","mdev")
+#set.seed(12345)			    
+#temp <- composite.rpart(dat=housing.data,n.grid=20,outvar="mdev")
+#plot(temp$lambdas,temp$Error.lambdas,xlab="lambda",ylab="Optimism corrected error",
+#     main="Optimism corrected error vs. lambda for housing data")
+
+## @knitr kcomposite.thirds
+
+composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y")
+{
+  n <- nrow(dat)
+  which.outcome <- which(colnames(dat)==outvar)
+  colnames(dat)[which.outcome] <- "outvar.aim2"	
+
+  #Split into learning and evaluation sets 
+  nlearn <- round(n/3)
+  ndisc <- round(n/3)
+  neval <- n-nlearn-ndisc
+  samp <- sample(1:n,n,replace=FALSE)
+  wlearn <- sort(samp[1:nlearn])
+  wdisc <- sort(samp[(nlearn+1):(nlearn+ndisc)])
+  weval <- sort(samp[(nlearn+ndisc+1):n])
+  
+  learning.dat <- dat[wlearn,]
+  discovery.dat <- dat[wdisc,]
+  evaluation.dat <- dat[weval,]
+
+  fit.rf.learning <- randomForest(outvar.aim2 ~ .,data = learning.dat) # Fit RF with learning set
+  predict.rf.discovery <- predict(fit.rf.learning,newdata=discovery.dat,predict.all=TRUE) #  $\widehat{Z}_{1i}$
+  mean.discovery <- mean(discovery.dat$outvar.aim2) # $\mu_{Z_1}$
+  var.discovery <- var(discovery.dat$outvar.aim2) # $\sigma^2_{Z_1}$
+  zbarhat <- mean(predict.rf.discovery$aggregate) # $ \bar{\hat{Z_1}}$ 
+  var.z1s <-  apply(predict.rf.discovery$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
+  alphas <- 1/var.z1s # $\alpha_i$
+  alphabar <- mean(alphas) # \bar{\alpha}$
+  lambda <- var.discovery/(neval*alphabar*(mean.discovery-zbarhat)^2) #with-in node 
+                                                                        #choice of \lambda
+  print(paste("lambda =",lambda)) 									
+  lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas
+  n.lambdas <- length(lambdas) #length of list
+  error.lambdas <- rep(0,length(lambdas)) 
+  fits <- vector("list",n.lambdas)
+  pruneds <- vector("list",n.lambdas)
+  predictions <- vector("list",n.lambdas)
+  use.dat<-discovery.dat
+  # To get the err(\lambda) - uncorrected - currently equation 11
+  for(j in 1:n.lambdas)
+    {
+      new.lambda <- lambdas[j]
+      print(new.lambda)
+      new.denom <- (1+alphas*new.lambda)
+#      print(new.denom)
+      ri <- 1/new.denom
+      ci <- ri*use.dat$outvar.aim2 + (1-ri)*predict.rf.discovery$aggregate
+      new.use.dat <- use.dat
+      new.use.dat$outvar.aim2 <- ci
+      current.fit <- rpart(outvar.aim2 ~ .,data = new.use.dat)
+      min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1]
+      print(min.CP)
+      current.fit.pruned<-prune(current.fit,cp=min.CP)
+      predicted.fit <- predict(object=current.fit.pruned, data=evaluation.dat)
+      error.lambdas[j] <- sum((evaluation.dat$outvar.aim2-predicted.fit)^2)
+      fits[[j]] <- current.fit
+      pruneds[[j]] <- current.fit.pruned
+      predictions[[j]] <- predicted.fit
+    }
+  best.lambda <- lambdas[order(error.lambdas)[1]]
+  new.denom <- (1+alphas*new.lambda)
+  ri <- 1/new.denom
+  ci <- ri*dat$outvar.aim2 + (1-ri)*predict(fit.rf.learning,newdata=dat)
+  dat$outvar.aim2 <- ci
+  current.fit <- rpart(outvar.aim2 ~ .,data = dat)
+  min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1]
+  print(min.CP)
+  current.fit.pruned<-prune(current.fit,cp=min.CP)
+  
+  list(lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,current.fit=current.fit,current.fit.pruned=current.fit.pruned)
+}
+
 
