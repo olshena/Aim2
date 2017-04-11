@@ -58,3 +58,11 @@ predict3.test <- predict(fit3$current.fit.pruned,newdata=sdat.test)
 
 res3.test <- sdat.test$price-predict3.test
 error3.test <- sqrt(sum(res3.test^2)/n.test)
+
+pdf("SaratogaFit.pdf")
+plot(sdat.test$price,res2.test,pch=16,col="green",xlab="Sqrt Price of Saratoga Housing",ylab="Residuals",cex=0.5,ylim=c(-400,400))
+abline(0,0)
+title(paste("Black: CART, Error is",round(error.test,1), "\n Red: Hybrid, Error is",round(error3.test,1),"\n Green is RF, Error is",round(error2.test,1)))
+points(sdat.test$price,res3.test,pch=16,col="red",cex=0.5)
+points(sdat.test$price,res.test,pch=16,col="black",cex=0.5)
+dev.off()

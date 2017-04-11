@@ -218,54 +218,84 @@ corrected.lambda <- function(dat,lambdas,list.object,model,predicted.values,alph
 #seed fixes the random number generator for reproducibility
 #outvar is the name of the outcome variable in the fitting
                              
-aim2 <- function(dat,nreps=1,n.grid=20,mult=2,seed=12345,outvar="mdev",prop.learning=0.5)  ### AMM - Should this be hardcoded with mdev? As is specific to housing data
+aim2 <- function(dat,nreps=1,n.grid=20,mult=2,seed=12345,outvar="mdev",prop.learning=0.5,finer.grid=FALSE)  ### AMM - Should this be hardcoded with mdev? As is specific to housing data
 {
 #Functions that go into penalized fitting method  
-  aim2.list <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, summary=aim2.summary, text=aim2.text)
-  set.seed(seed)
-  n <- nrow(dat)
+    aim2.list <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, summary=aim2.summary, text=aim2.text)
+    set.seed(seed)
+    n <- nrow(dat)
 #Identify outcome variable
     which.outcome <- which(colnames(dat)==outvar)
     if(length(which.outcome)==0) stop(paste("No variable found labeled as",outvar))
   colnames(dat)[which.outcome] <- "outvar.aim2"
 #Make training and test data
-  ntrain <- round(prop.learning*n)
-  ntest <- n-ntrain
-  samp <- sample(1:n,n,replace=FALSE)
-  wtrain <- sort(samp[1:ntrain])
-  wtest <- sort(samp[(ntrain+1):n])
-  training.dat <- dat[wtrain,]
-  test.dat <- dat[wtest,]
+    ntrain <- round(prop.learning*n)
+    ntest <- n-ntrain
+    samp <- sample(1:n,n,replace=FALSE)
+    wtrain <- sort(samp[1:ntrain])
+    wtest <- sort(samp[(ntrain+1):n])
+    training.dat <- dat[wtrain,]
+    test.dat <- dat[wtest,]
 #The lambdas chosen by Rob's method  
-  fit.rf.training <- randomForest(outvar.aim2 ~ .,data = training.dat)
-  predict.rf.test <- predict(fit.rf.training,newdata=test.dat,predict.all=TRUE)
-  mean.test <- mean(test.dat$outvar.aim2)
-  var.test <- var(test.dat$outvar.aim2)
-  zbarhat <- mean(predict.rf.test$aggregate)
-  var.z1s <-  apply(predict.rf.test$individual,1,var)
-  alphas <- 1/var.z1s
-  alphabar <- mean(alphas)
-  lambda <- var.test/(ntest*alphabar*(mean.test-zbarhat)^2)
-  lambdas <- seq(0,mult*lambda,length.out=n.grid)
-  n.lambdas <- length(lambdas)
-  error.lambdas <- rep(0,length(lambdas))
-  fits <- vector("list",n.lambdas)
-  predictions <- vector("list",n.lambdas)
-  for(i in 1:n.lambdas)
+    fit.rf.training <- randomForest(outvar.aim2 ~ .,data = training.dat)
+    predict.rf.test <- predict(fit.rf.training,newdata=test.dat,predict.all=TRUE)
+    mean.test <- mean(test.dat$outvar.aim2)
+    var.test <- var(test.dat$outvar.aim2)
+    zbarhat <- mean(predict.rf.test$aggregate)
+    var.z1s <-  apply(predict.rf.test$individual,1,var)
+    alphas <- 1/var.z1s
+    alphabar <- mean(alphas)
+    lambda <- var.test/(ntest*alphabar*(mean.test-zbarhat)^2)
+    lambdas <- seq(0,mult*lambda,length.out=n.grid)
+    n.lambdas <- length(lambdas)
+    total.lambdas <- ifelse(finer.grid,n.lambdas+finer.grid,n.lambdas)
+    error.lambdas <- rep(0,total.lambdas)
+    fits <- vector("list",total.lambdas)
+    predictions <- vector("list",total.lambdas)
+    for(i in 1:n.lambdas)
     {
-#  final.lambda <- find.lambda(dat=dat,lambdas=lambdas,list.object=aim2.list)
-#      final.fit <- rpart(outvar.aim2 ~ .,data = test.dat,parms=list(lambda=final.lambda,yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
-      current.fit <- rpart(outvar.aim2 ~ .,data = test.dat,parms=list(lambda=lambdas[i],yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
-      predicted.fit <- predict(object=current.fit,newdata=test.dat)
-      error.lambdas[i] <- sum((test.dat$outvar.aim2-predicted.fit)^2)
-      fits[[i]] <- current.fit
-      predictions[[i]] <- predictions
+        current.fit <- rpart(outvar.aim2 ~ .,data = test.dat,parms=list(lambda=lambdas[i],yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
+        predicted.fit <- predict(object=current.fit,newdata=test.dat)
+        error.lambdas[i] <- sum((test.dat$outvar.aim2-predicted.fit)^2)
+        fits[[i]] <- current.fit
+        predictions[[i]] <- predictions
     }
-  optimism <- corrected.lambda(dat=test.dat,lambdas=lambdas,list.object=aim2.list,model=fit.rf.training,predicted.values=predict.rf.test$aggregate,alphas=alphas,n.boot=10)
-  Error.lambdas <- error.lambdas+optimism
-#  list(final.fit=final.fit,lambdas=lambdas,final.lambda=final.lambda)
-  list(lambdas=lambdas,Error.lambdas=Error.lambdas,error.lambdas=error.lambdas,optimism=optimism,fits=fits,predictions=predictions,current.fit=current.fit,predicted.fit=predicted.fit,test.dat=test.dat)
+    optimism <- corrected.lambda(dat=test.dat,lambdas=lambdas,list.object=aim2.list,model=fit.rf.training,predicted.values=predict.rf.test$aggregate,alphas=alphas,n.boot=10)
+    print(optimism)
+    Error.lambdas <- error.lambdas[1:n.lambdas]+optimism
+    if(finer.grid)
+    {
+        print(Error.lambdas)
+        which.min <- order(Error.lambdas)[1]
+        print(which.min)
+        if(which.min==n.lambdas) lambdas <- c(lambdas,(seq(lambdas[n.lambdas],2*lambdas[n.lambdas],length.out=(finer.grid+2)))[-c(1,finer.grid+2)])
+        else
+        {
+            n.left <- round(finer.grid/2)
+            print(n.left)
+            n.right <- finer.grid-n.left
+            print(n.right)
+            lambdas <- c(lambdas,(seq(lambdas[which.min-1],lambdas[which.min],length.out=(n.left+2)))[-c(1,n.left+2)],(seq(lambdas[which.min],lambdas[which.min+1],length.out=(n.right+2)))[-c(1,n.right+2)])
+            print(lambdas)
+        }
+        for(i in (n.lambdas+1):total.lambdas)
+        {
+            print(i)
+            current.fit <- rpart(outvar.aim2 ~ .,data = test.dat,parms=list(lambda=lambdas[i],yhat=predict.rf.test$aggregate,alpha=alphas),method=aim2.list)
+            predicted.fit <- predict(object=current.fit,newdata=test.dat)
+            error.lambdas[i] <- sum((test.dat$outvar.aim2-predicted.fit)^2)
+            fits[[i]] <- current.fit
+            predictions[[i]] <- predictions
+        }
+        optimism <- corrected.lambda(dat=test.dat,lambdas=lambdas[(n.lambdas+1):total.lambdas],list.object=aim2.list,model=fit.rf.training,predicted.values=predict.rf.test$aggregate,alphas=alphas,n.boot=10)
+        Error.lambdas[(n.lambdas+1):total.lambdas] <- error.lambdas[(n.lambdas+1):total.lambdas]+optimism
+    }
+    list(lambdas=lambdas,Error.lambdas=Error.lambdas,error.lambdas=error.lambdas,optimism=optimism,fits=fits,predictions=predictions,current.fit=current.fit,predicted.fit=predicted.fit,test.dat=test.dat)
 }
+
+
+
+
 #final.fit is rpart tree chosen by optimal lambda
 #lambdas are the values of lambda from grid search
 #final.lambda is the optimal lambda chosen by 3-fold cross-validation

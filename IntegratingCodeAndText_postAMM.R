@@ -307,7 +307,12 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y")
   alphabar <- mean(alphas) # \bar{\alpha}$
   lambda <- var.discovery/(neval*alphabar*(mean.discovery-zbarhat)^2) #with-in node 
                                                                         #choice of \lambda
-  print(paste("lambda =",lambda)) 									
+  print(paste("zbarhat =",zbarhat))
+  print(paste("mean.discovery =",mean.discovery))
+  print(paste("alphabar =",alphabar))
+  print(paste("neval =",neval))		  
+  print(paste("var.discovery =",var.discovery))
+  print(paste("lambda =",lambda)) 									  
   lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas
   n.lambdas <- length(lambdas) #length of list
   error.lambdas <- rep(0,length(lambdas)) 
@@ -319,16 +324,13 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y")
   for(j in 1:n.lambdas)
     {
       new.lambda <- lambdas[j]
-      print(new.lambda)
       new.denom <- (1+alphas*new.lambda)
-#      print(new.denom)
       ri <- 1/new.denom
       ci <- ri*use.dat$outvar.aim2 + (1-ri)*predict.rf.discovery$aggregate
       new.use.dat <- use.dat
       new.use.dat$outvar.aim2 <- ci
       current.fit <- rpart(outvar.aim2 ~ .,data = new.use.dat)
       min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1]
-      print(min.CP)
       current.fit.pruned<-prune(current.fit,cp=min.CP)
       predicted.fit <- predict(object=current.fit.pruned, data=evaluation.dat)
       error.lambdas[j] <- sum((evaluation.dat$outvar.aim2-predicted.fit)^2)
@@ -337,16 +339,15 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y")
       predictions[[j]] <- predicted.fit
     }
   best.lambda <- lambdas[order(error.lambdas)[1]]
-  new.denom <- (1+alphas*new.lambda)
+  new.denom <- (1+alphas*best.lambda)
   ri <- 1/new.denom
   ci <- ri*dat$outvar.aim2 + (1-ri)*predict(fit.rf.learning,newdata=dat)
   dat$outvar.aim2 <- ci
   current.fit <- rpart(outvar.aim2 ~ .,data = dat)
   min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1]
-  print(min.CP)
   current.fit.pruned<-prune(current.fit,cp=min.CP)
   
-  list(lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,current.fit=current.fit,current.fit.pruned=current.fit.pruned)
+  list(best.lambda=best.lambda,lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,current.fit=current.fit,current.fit.pruned=current.fit.pruned,alphas=alphas,alphas.lambda=alphas*best.lambda,ri=1/(1+alphas*best.lambda))
 }
 
 
