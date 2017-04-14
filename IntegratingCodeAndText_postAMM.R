@@ -304,8 +304,9 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y")
   zbarhat <- mean(predict.rf.discovery$aggregate) # $ \bar{\hat{Z_1}}$ 
   var.z1s <-  apply(predict.rf.discovery$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
   alphas <- 1/var.z1s # $\alpha_i$
+  alphas <- alphas/sum(alphas)
   alphabar <- mean(alphas) # \bar{\alpha}$
-  lambda <- var.discovery/(neval*alphabar*(mean.discovery-zbarhat)^2) #with-in node 
+  lambda <- var.discovery/(ndisc*alphabar*(mean.discovery-zbarhat)^2) #with-in node 
                                                                         #choice of \lambda
   print(paste("zbarhat =",zbarhat))
   print(paste("mean.discovery =",mean.discovery))
@@ -315,7 +316,7 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y")
   print(paste("lambda =",lambda)) 									  
   lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas
   n.lambdas <- length(lambdas) #length of list
-  error.lambdas <- rep(0,length(lambdas)) 
+  error.lambdas <- rep(0,n.lambdas) 
   fits <- vector("list",n.lambdas)
   pruneds <- vector("list",n.lambdas)
   predictions <- vector("list",n.lambdas)
@@ -347,7 +348,7 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y")
   min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1]
   current.fit.pruned<-prune(current.fit,cp=min.CP)
   
-  list(best.lambda=best.lambda,lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,current.fit=current.fit,current.fit.pruned=current.fit.pruned,alphas=alphas,alphas.lambda=alphas*best.lambda,ri=1/(1+alphas*best.lambda))
+  list(best.lambda=best.lambda,lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,current.fit=current.fit,current.fit.pruned=current.fit.pruned,alphas=alphas,alphas.lambda=alphas*best.lambda,ri=ri)
 }
 
 
