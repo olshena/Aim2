@@ -238,7 +238,7 @@ composite.rpart=function(dat,n.grid=20,mult=2,outvar="Y",prop.learning=0.5)
   alphabar <- mean(alphas) # \bar{\alpha}$
   lambda <- var.evaluation/(neval*alphabar*(mean.evaluation-zbarhat)^2) #with-in node 
                                                                         #choice of \lambda
-  print(paste("lambda =",lambda)) 									
+  #print(paste("lambda =",lambda)) 									
   lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas
   n.lambdas <- length(lambdas) #length of list
   error.lambdas <- rep(0,length(lambdas)) 
@@ -249,9 +249,9 @@ composite.rpart=function(dat,n.grid=20,mult=2,outvar="Y",prop.learning=0.5)
   for(j in 1:n.lambdas)
     {
       new.lambda <- lambdas[j]
-      print(new.lambda)
+      #print(new.lambda)
       new.denom <- (1+alphas*new.lambda)
-      print(new.denom)
+      #print(new.denom)
       ri <- 1/new.denom
       ci <- ri*use.dat$outvar.aim2 + (1-ri)*predict.rf.evaluation$aggregate
       new.use.dat <- use.dat
@@ -332,7 +332,7 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y")
       new.use.dat <- use.dat
       new.use.dat$outvar.aim2 <- ci
       current.fit <- rpart(outvar.aim2 ~ .,data = new.use.dat)
-      min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1]
+      min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1][1]
       current.fit.pruned<-prune(current.fit,cp=min.CP)
       predicted.fit <- predict(object=current.fit.pruned, data=evaluation.dat)
       error.lambdas[j] <- sum((evaluation.dat$outvar.aim2-predicted.fit)^2)
@@ -425,7 +425,7 @@ CVcorrected.lambda <- function(dat, lambdas, model, predicted.values,
 # parametric bootstrap - this has been modified from Adam's
 # original version
 
-corrected.lambda <- function(dat, lambdas, list.object, model, 
+corrected.lambda.LSD <- function(dat, lambdas, list.object, model, 
                              predicted.values, alphas, n.boot = 10) {
   n1 <- nrow(dat)
   p <- ncol(dat)
@@ -500,7 +500,7 @@ corrected.lambda <- function(dat, lambdas, list.object, model,
   return(2 * apply(cilambda, 2, sum))
 }
 
-composite.rpart = function(dat, n.grid = 20, mult = 1, uplim = 10, 
+composite.rpart.Grid = function(dat, n.grid = 20, mult = 1, uplim = 10, 
                            outvar = "Y", prop.learning = 0.5) {
   
   n <- nrow(dat)
@@ -521,9 +521,7 @@ composite.rpart = function(dat, n.grid = 20, mult = 1, uplim = 10,
                                   ntree = 1000)
   predict.rf.evaluation <- predict(fit.rf.learning, newdata = evaluation.dat, 
                                    predict.all = TRUE)
-  
-  
-  
+
   # mean, variance of Z's in evaluation set
   mean.evaluation <- mean(evaluation.dat$outvar.aim2)  # $\mu_{Z_1}$
   var.evaluation <- var(evaluation.dat$outvar.aim2)  # $\sigma^2_{Z_1}$
@@ -572,7 +570,7 @@ composite.rpart = function(dat, n.grid = 20, mult = 1, uplim = 10,
     
     # prune that tree using manual CV
     min.CP <- current.fit$cptable[which(current.fit$cptable[, 
-                                                            4] == min(current.fit$cptable[, 4])), 1]
+                                                            4] == min(current.fit$cptable[, 4])), 1][1]
     current.fit.pruned <- prune(current.fit, cp = min.CP)
     
     # derive predicted outcomes for each observation in that
@@ -596,7 +594,7 @@ composite.rpart = function(dat, n.grid = 20, mult = 1, uplim = 10,
                                         alphas = alphas)
   
   Error.lambdas <- errorU.lambdas
-  optimism <- corrected.lambda(dat = evaluation.dat, lambdas = lambdas, 
+  optimism <- corrected.lambda.LSD(dat = evaluation.dat, lambdas = lambdas, 
                                list.object = aim2.list, model = fit.rf.learning, predicted.values = predict.rf.evaluation$aggregate, 
                                alphas = alphas, n.boot = 1000)
   Error.lambdas <- Error.lambdas + optimism
@@ -604,29 +602,4 @@ composite.rpart = function(dat, n.grid = 20, mult = 1, uplim = 10,
   list(lambdas = lambdas, error.lambdas = error.lambdas, errorU.lambdas = errorU.lambdas, 
        Error.lambdas = Error.lambdas, fits = fits, predictions = predictions, 
        optimism = optimism, CVError.lambdas = CVError.lambdas)
-}
-
-################################################################################ RUN FOR HOUSING DATA
-
-housing.data <- as.data.frame(matrix(scan("housing.data"), nrow = 506, 
-                                     byrow = TRUE))
-colnames(housing.data) <- c("crim", "zn", "indus", "chas", "nox", 
-                            "rm", "age", "dis", "rad", "tax", "ptratiob", "b", "lstat", 
-                            "mdev")
-
-set.seed(12345)
-temp <- composite.rpart(dat = housing.data, n.grid = 20, mult = 1, 
-                        uplim = 20, outvar = "mdev", prop.learning = 0.5)
-
-doit = TRUE
-if (doit) {
-  par(mfrow = c(2, 2))
-  plot(temp$lambdas, temp$errorU.lambdas, xlab = "lambda", 
-       ylab = "apparent error", main = "apparent errorU (orig response) vs. lambda")
-  plot(temp$lambdas, temp$Error.lambdas, xlab = "lambda", ylab = "Corrected error", 
-       main = "op-corr apparent errorU vs. lambda")
-  plot(temp$lambdas, temp$error.lambdas, xlab = "lambda", ylab = "apparent error", 
-       main = "apparent error vs. lambda")
-  plot(temp$lambdas, temp$CVError.lambdas, xlab = "lambda", 
-       ylab = "CV error", main = "CV-based error vs. lambda")
 }
