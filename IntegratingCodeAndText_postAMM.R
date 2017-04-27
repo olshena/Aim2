@@ -279,7 +279,7 @@ composite.rpart=function(dat,n.grid=20,mult=2,outvar="Y",prop.learning=0.5)
 
 ## @knitr kcomposite.thirds
 
-composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y")
+composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=FALSE)
 {
   n <- nrow(dat)
   which.outcome <- which(colnames(dat)==outvar)
@@ -305,16 +305,20 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y")
   zbarhat <- mean(predict.rf.discovery$aggregate) # $ \bar{\hat{Z_1}}$ 
   var.z1s <-  apply(predict.rf.discovery$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
   alphas <- 1/var.z1s # $\alpha_i$
-  alphas <- alphas/sum(alphas)
+ # alphas <- alphas/sum(alphas)
   alphabar <- mean(alphas) # \bar{\alpha}$
   lambda <- var.discovery/(ndisc*alphabar*(mean.discovery-zbarhat)^2) #with-in node 
                                                                         #choice of \lambda
+  if(verbose){
   print(paste("zbarhat =",zbarhat))
   print(paste("mean.discovery =",mean.discovery))
   print(paste("alphabar =",alphabar))
   print(paste("neval =",neval))		  
   print(paste("var.discovery =",var.discovery))
-  print(paste("lambda =",lambda)) 									  
+  print(paste("lambda =",lambda))
+  print(paste("nlearn =",nlearn))
+  print(paste("ndisc =",ndisc))
+  }
   lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas
   n.lambdas <- length(lambdas) #length of list
   error.lambdas <- rep(0,n.lambdas) 
@@ -334,22 +338,27 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y")
       current.fit <- rpart(outvar.aim2 ~ .,data = new.use.dat)
       min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1][1]
       current.fit.pruned<-prune(current.fit,cp=min.CP)
-      predicted.fit <- predict(object=current.fit.pruned, data=evaluation.dat)
+      predicted.fit <- predict(object=current.fit.pruned, newdata=evaluation.dat)
       error.lambdas[j] <- sum((evaluation.dat$outvar.aim2-predicted.fit)^2)
       fits[[j]] <- current.fit
       pruneds[[j]] <- current.fit.pruned
       predictions[[j]] <- predicted.fit
     }
   best.lambda <- lambdas[order(error.lambdas)[1]]
-  new.denom <- (1+alphas*best.lambda)
+  fit.rf.all <- randomForest(outvar.aim2 ~ .,data = dat) # Fit RF with learning set
+  predict.rf.all <- predict(fit.rf.learning,newdata=dat,predict.all=TRUE) #  $\widehat{Z}_{1i}$
+  var.all <-  apply(predict.rf.all$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
+  alphas.all <- 1/var.all
+#  alphas.all <- alphas.all/sum(alphas.all)
+  new.denom <- (1+alphas.all*best.lambda)
   ri <- 1/new.denom
   ci <- ri*dat$outvar.aim2 + (1-ri)*predict(fit.rf.learning,newdata=dat)
   dat$outvar.aim2 <- ci
   current.fit <- rpart(outvar.aim2 ~ .,data = dat)
-  min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1]
+  min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1][1]
   current.fit.pruned<-prune(current.fit,cp=min.CP)
   
-  list(best.lambda=best.lambda,lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,current.fit=current.fit,current.fit.pruned=current.fit.pruned,alphas=alphas,alphas.lambda=alphas*best.lambda,ri=ri)
+  list(best.lambda=best.lambda,lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,current.fit=current.fit,current.fit.pruned=current.fit.pruned,alphas=alphas.all,alphas.lambda=alphas.all*best.lambda,ri=ri)
 }
 
 ## @knitr RobsComposite
