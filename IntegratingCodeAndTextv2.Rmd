@@ -7,6 +7,10 @@ output:
     toc: true
     toc_depth: 3
 ---
+```{r echo=FALSE}
+library(knitr)
+read_chunk("IntegratingCodeAndText_postAMM.R")
+```
 
 # General set up for Aim 2b: 
 
@@ -102,13 +106,13 @@ where $n_{v,j,s} =  \sum_i I( W_{1i} \in Q_{v}(j,s) ).$
 
 
 The choice $\alpha^{-1}_i = \mbox{var}( \hat{Z}_{1i} )$ is probably
-best from an efficiency perspective; hence the choice of
+best from an efficiency perpsective; hence the choice of
 $\alpha_i = \hat{\gamma}^{-1}_{i}$ in the grant application text. Note that, given $\bar{\alpha}_{j,v,s},$  more weight is placed on
 $\hat{\bar{Z}}_{1v}(j,s)$ when $\lambda$ is larger; similarly, 
 given $\lambda$, more weight is placed on
 $\hat{\bar{Z}}_{1v}(j,s)$ when $\bar{\alpha}_{j,v,s}$ is larger.
 Both make sense in shrinking the parameter estimate
-towards this weighted mean function. \\
+towards this weighted mean function.\\
 
 To decide: 
 \begin{enumerate}
@@ -264,10 +268,8 @@ The final $\hat{\lambda}$ is the one gives the best optimism-corrected
 error rate in \eqref{optcor}. Once we have $\hat{\lambda}$ we build a CART tree based on
 \eqref{bigopt}.   
 
-```{r echo=FALSE, message=FALSE}
-library(randomForest)
-library(rpart)
-library(rpart.plot)
+```{r }
+<<klibraries>>
 ```
 
 ## Functions
@@ -280,7 +282,7 @@ The main function is the `aim2` function which has calls:
   - **nreps** is set to 1 for the time being  
   - **ngrid** is the number of lambdas in the grid search  
   - **mult** is the number multiplied times the intial lambda which gives the maximum lambda in the grid search  
-  - **seed** fixes the random number generator for reproducibility  -- This should be outside
+  - **seed** fixes the random number generator for reproducibility  
   - **outvar** is the name of the outcome variable in the fitting  
 
 \paragraph{The output from the function `aim2 is:}
@@ -288,7 +290,7 @@ The main function is the `aim2` function which has calls:
 \item {\bf lambdas} are the values of lambda from grid search
 \item {\bf Error.lambdas} are the bootstrapped corrected errors from \eqref{optcor} 
 \item {\bf error.lambdas} is the apparent prediction error from \eqref{eq: errorLambda}
-\item {\bf optimism} is $2*\sum^{n_1}_{i=1} C^*_i(\lambda)$ from the right hand side of sum in \eqref{optcor} 
+\item {\bf optimism} is $2*\sum^{n_1}_i=1 C^*_i(\lambda)$ from the right hand side of sum in \eqref{optcor} 
 \item {\bf fits} are the new $\hat {\cal M}(W_{1i},\lambda)$ for the different lambdas
 \item {\bf predictions} are the predicted values for the evaluations set from $\hat {\cal M}(W_{1i},\lambda)$
 \item {\bf evaluation.dat} is the evaluation data 
@@ -296,78 +298,7 @@ The main function is the `aim2` function which has calls:
 
 
 ```{r}
-                            
-aim2 <- function(dat,nreps=1,n.grid=20,mult=2,seed=12345,outvar="Y")  
-{
-  #Functions that go into penalized fitting method  
-  aim2.list <- list(eval=aim2.eval, split=aim2.split, init=aim2.init, 
-                    summary=aim2.summary, text=aim2.text)
-  set.seed(seed)
-  n <- nrow(dat)
-  
-  #Identify outcome variable   --- this is redundant with functions statement and should be changed
-  which.outcome <- which(colnames(dat)==outvar)
-  colnames(dat)[which.outcome] <- "outvar.aim2"
-  
-  #Split training set into learning and evaluation sets - now based on 50/50 split
-  # later look at different alternatives
-  nlearn <- round(n/2)
-  neval <- n-nlearn
-  samp <- sample(1:n,n,replace=FALSE)
-  wlearn <- sort(samp[1:nlearn])
-  weval <- sort(samp[(nlearn+1):n])
-  learning.dat <- dat[wlearn,]
-  evaluation.dat <- dat[weval,]
-
-  #The lambdas chosen using a grid. Here, get values for variables based on root node
-  fit.rf.learning <- randomForest(outvar.aim2 ~ .,data = learning.dat) # Fit RF with learning set
-  predict.rf.evaluation <- predict(fit.rf.learning,newdata=evaluation.dat,
-                                   predict.all=TRUE) #  $\widehat{Z}_{1i}$
-  mean.evaluation <- mean(evaluation.dat$outvar.aim2) # $\mu_{Z_1}$
-  var.evaluation <- var(evaluation.dat$outvar.aim2) # $\sigma^2_{Z_1}$
-  zbarhat <- mean(predict.rf.evaluation$aggregate) # $ \bar{\hat{Z_1}}$ 
-  
-    # NOTE: this zbarhat means we are doing the 
-    # alternative shrinkage target in equation 9 not the original in 6
-  
-  var.z1s <-  apply(predict.rf.evaluation$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
-  alphas <- 1/var.z1s # $\alpha_i$
-  alphabar <- mean(alphas) # \bar{\alpha}$
-  lambda <- var.evaluation/(neval*alphabar*(mean.evaluation-zbarhat)^2) #with-in node 
-                                                                        #choice of \lambda
-  lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas
-  n.lambdas <- length(lambdas) #length of list
-  error.lambdas <- rep(0,length(lambdas)) 
-  fits <- vector("list",n.lambdas)
-  predictions <- vector("list",n.lambdas)
-  
-  # To get the err(\lambda) - uncorrected - currently equation 11
-  for(j in 1:n.lambdas)
-    {
-      current.fit <- rpart(outvar.aim2 ~ .,data = evaluation.dat,
-                           parms=list(lambda=lambdas[j],
-                           yhat=predict.rf.evaluation$aggregate,
-                           alpha=alphas),method=aim2.list)   
-      predicted.fit <- predict(object=current.fit,newdata=evaluation.dat)
-      error.lambdas[j] <- sum((evaluation.dat$outvar.aim2-predicted.fit)^2)
-      fits[[j]] <- current.fit
-      predictions[[j]] <- predicted.fit
-  }
-  
-  # To get the optimism for correcting the err(\lambda)
-  optimism <- corrected.lambda(dat=evaluation.dat,lambdas=lambdas,
-                               list.object=aim2.list,model=fit.rf.learning,
-                               predicted.values=predict.rf.evaluation$aggregate,
-                               alphas=alphas,n.boot=10)
-  
-  # err(\lambda) corrected
-  Error.lambdas <- error.lambdas+optimism
-  
-  #return list of interesting variables.
-  list(lambdas=lambdas,Error.lambdas=Error.lambdas,error.lambdas=error.lambdas,
-       optimism=optimism,fits=fits,predictions=predictions,
-       predicted.fit=predicted.fit,evaluation.dat=evaluation.dat)
-}
+ <<kaim2>>
 ```
 At the end of this function, `optimisim` is as written in equation \eqref{optimism} and `Error.lambdas` is in equation \eqref{optcor}. 
 
@@ -376,35 +307,7 @@ At the end of this function, `optimisim` is as written in equation \eqref{optimi
 This function is called by `aim2` to get the optimism correction for the prediction error. This implements the parametric boostrap and evaluates equations \eqref{sigma_z1_calM} - \eqref{eq: barzstar} and returns the righthand side of \eqref{optcor}.
 
 ```{r}
-corrected.lambda <- function(dat,lambdas,list.object,model,predicted.values,alphas,n.boot=10)
-  {
-    n1 <- nrow(dat)
-    p <- ncol(dat)
-    n.lambdas <- length(lambdas)
-    cilambda <- matrix(0,n1,n.lambdas)
-    boot.dat <- boot.residual <- matrix(NA,n1,n.boot)
-    sigmahat <- sqrt(sum((dat$outvar.aim2-predicted.values)^2)/n1) #SD for \hat{\sigma^2_{Z_1-\bigM}}
-
-    for(b in 1:n.boot) boot.dat[,b] <- rnorm(n1,mean=predicted.values,sd=sigmahat)#bootstrap samples
-    boot.mean <- matrix(apply(boot.dat,1,mean))  # \bar{Z^*_{1i}}
-    for(i in 1:nrow(boot.dat)) boot.residual[i,] <- boot.dat[i,]-boot.mean[i]
-    for(b in 1:n.boot)
-      {
-        new.dat <- dat
-        new.dat$outvar.aim2 <- boot.dat[,b] 
-        for(j in 1:n.lambdas)
-          {
-            final.fit <- rpart(outvar.aim2 ~ .,data = new.dat,
-                               parms=list(lambda=lambdas[j],
-                               yhat=predicted.values,alpha=alphas),
-                               method=list.object)
-            bigMhat <- predict(object=final.fit,newdata=new.dat)
-            cilambda[,j] <- cilambda[,j]+bigMhat*boot.residual[,b]
-          }
-      }
-    cilambda <- cilambda/(n.boot-1)
-    return(2*apply(cilambda,2,sum))
-  }
+<<kcorrected.lambda>> 
 ```
 
 
@@ -426,97 +329,7 @@ optimal split is found.  This is done currently by looping through
 every value of every variable.  Future effort will be undertaken to
 see if the loop can be removed.  
 ```{r}
-
-
-#y contains response Z_i, Zhat_i from RF, and alpha where alpha=1/var(zhat)
-
-aim2.init <- function(y, offset, parms, wt)
-{
-  if (!is.null(offset)) y[,1] <- y[,1]-offset
-  list(y=cbind(y,parms$yhat,parms$alpha),parms=parms, numy=3, numresp=1, summary=aim2.summary)
-}
-
-aim2.eval <- function(y, wt, parms)
-{
-  n <- length(y)/3
-  lambda <- parms$lambda
-  yhat <- y[,2]
-  alphas <- y[,3]
-  alphabar <- sum(alphas)/n
-  y1 <- y[,1]
-  r <- 1/(1+lambda*alphabar)
-  zbar <- mean(y1)
-  zbarhat <- sum(yhat*alphas)/sum(alphas)
-  chat <- r*zbar+(1-r)*zbarhat
-  rss <- sum((y1-chat)^2+lambda*alphas*(chat-yhat)^2)
-  list(label=chat, deviance=rss)
-}
-
-aim2.split <- function(y, wt, x, parms, continuous)
-  {
-    n <- length(y[,1])
-    y1 <- y[,1]
-    yhat <- y[,2]
-    alpha <- y[,3]
-    lambda <- parms$lambda
-    if (continuous)
-      {
-        if(is.null(lambda)) compute.lambda #Placeholder until I figure out how to compute lambda
-        goodness <- direction <- double(n-1) #Allocate 0 vector
-        y.cumsum <- cumsum(y1)
-        y.left <- y.cumsum[-n]
-        y.right <- y.cumsum[n]-y.left
-        yhat.cumsum <- cumsum(yhat*alpha)
-        yhat.left <- yhat.cumsum[-n]
-        yhat.right <- yhat.cumsum[n]-yhat.left
-        alpha.cumsum <- cumsum(alpha)
-        alpha.left <- alpha.cumsum[-n]
-        alpha.right <- alpha.cumsum[n]-alpha.left
-        for(i in 1:(n-1))
-          {
-            zbar.left <- y.left[i]/i
-            zbar.right <- y.right[i]/(n-i)
-            zbarhat.left <- yhat.left[i]/alpha.left[i]
-            zbarhat.right <- yhat.right[i]/alpha.right[i]
-            alphabar.left <- alpha.left[i]/i
-            alphabar.right <- alpha.right[i]/(n-i)
-            r.left <- 1/(1+lambda*alphabar.left)
-            r.right <- 1/(1+lambda*alphabar.right)
-            chat.left <- r.left*zbar.left+(1-r.left)*zbarhat.left
-            chat.right <- r.right*zbar.right+(1-r.right)*zbarhat.right
-
-#            goodness[i] <- sum((y1-mean(y1))^2) 
-#                 - (sum((y1[1:i]-chat.left)^2 +
-#                    lambda*alpha[1:i]*(yhat[1:i]-chat.left)^2) +
-#                   sum((y1[(i+1):n]-chat.right)^2 +
-#                  lambda*alpha[(i+1):n]*(yhat[(i+1):n]-chat.right)^2)) 
-#           Do we need adjustment for missing values like in  vignette example?
-            
-            direction[i] <- sign(zbar.left-zbar.right)
-            goodness.left <- sum((y1[1:i]-chat.left)^2 + lambda*alpha[1:i]*(yhat[1:i]-chat.left)^2)
-            goodness.right <- sum((y1[(i+1):n]-chat.right)^2 + 
-                                    lambda*alpha[(i+1):n]*(yhat[(i+1):n]-chat.right)^2)
-            tss <- sum((y1-mean(y1))^2)
-            goodness[i] <- tss-goodness.left-goodness.right
-
-          }
-      } # this means we can only have x continuous - no categorical
-#    goodness <- 1/goodness
-    return(list(goodness=goodness, direction=direction))
-  }
-
-aim2.summary <- function(yval, dev, wt, ylevel, digits )
-{
-  paste(" mean=", format(signif(yval, digits)), ", MSE=" , format(signif(dev/wt, digits)), sep= '')
-}
-
-aim2.text <- function(yval, dev, wt, ylevel, digits, n, use.n )
-{
-  if(use.n) paste(formatg(yval,digits)," nn=", n,sep="")
-  else paste(formatg(yval,digits))
-}
-
-
+<<krpartfxs>>
 
 ```
 
@@ -524,37 +337,169 @@ aim2.text <- function(yval, dev, wt, ylevel, digits, n, use.n )
 For an example, we have the Boston housing data. In the following block of text we read in the data, rename the columns, run the algorithm (via `aim2` function) and then plot the errors. 
 
 ```{r}
+set.seed(12345)
 housing.data <- as.data.frame(matrix(scan("housing.data"),nrow=506,byrow=TRUE))
 colnames(housing.data) <- c("crim","zn","indus","chas","nox","rm","age","dis","rad",
                             "tax","ptratiob","b","lstat","mdev")
-temp <- aim2(dat=housing.data,nreps=1,n.grid=20,mult=2,seed=12345,outvar="mdev")
+temp <- aim2(dat=housing.data,nreps=1,n.grid=20,mult=2,outvar="mdev",prop.learning=0.5)
 
   plot(temp$lambdas,temp$Error.lambdas,xlab="lambda",ylab="Optimism corrected error",
        main="Optimism corrected error vs. lambda for housing data")
 ```
 
 According to this plot, we would select the lambda equal to 
-`r temp$lambdas[which(temp$Error.lambdas==min(temp$Error.lambdas))]` is the one which minimizes the optimism corrected error. Using that lambda we get the following `rpart` tree:
+$`r temp$lambdas[which(temp$Error.lambdas==min(temp$Error.lambdas))]`$ is the one which minimizes the optimism corrected error. Using that lambda we get the following rpart tree:
 
 ```{r echo=FALSE, message = FALSE}
   lambda.num<-which(temp$Error.lambdas==min(temp$Error.lambdas))
   prp(temp$fits[[ lambda.num]])
+   test.dat.predicted.fit.resub<-predict(object=temp$fits[[lambda.num]],newdata=housing.data)
+  error.test.dat.resub <- sum((housing.data$mdev-test.dat.predicted.fit.resub)^2)
 ```
 
 
+The resubstitution estimate of prediction error is $ `r  round(error.test.dat.resub,3)`$.   
+
+
+If we just ran a rpart tree:
+
+```{r}
+
+summary(justRpart<-rpart(mdev ~ .,data = housing.data)  )
+#prp(justRpart)
+min.CP<-justRpart$cptable[which(justRpart$cptable[,4]==min(justRpart$cptable[,4])),1]
+justRpartpruned<-prune(justRpart,cp=min.CP)
+prp(justRpartpruned)
+   rpart.test.dat.predicted.fit.resub<-predict(object=justRpartpruned,newdata=housing.data)
+  rpart.error.test.dat.resub <- sum((housing.data$mdev-rpart.test.dat.predicted.fit.resub)^2)
+```
+
+With prediction error $`r round(rpart.error.test.dat.resub,3)`$
+
+
+## Switching to Composite functions.
+At the moment we have three composite functions - the original we worked on in DC, the "thirds" version Adam has worked on and Rob's version which searches a grid and uses a logspline density for the bootstrap. 
+
+
+
+### DC Code 
+
+```{r}
+<<kcomposite>>
+
+```
+
+The Boston housing data with the DC Code looks like:
+
+
+```{r}
+temp <- composite.rpart(dat=housing.data,n.grid=50,mult=4,outvar="mdev")
+plot(temp$lambdas,temp$error.lambdas,xlab="lambda",ylab="Optimism corrected error",
+     main="DC Code: Optimism corrected error vs. lambda for housing data")
+```
+The min of which is$ `r temp$lambdas[temp$error.lambdas==min(temp$error.lambdas)]`$. 
+
+The corresponding tree is: 
+```{r echo=FALSE, message = FALSE}
+  lambda.num<-which(temp$error.lambdas==min(temp$error.lambdas))
+  prp(temp$fits[[ lambda.num]])
+   test.dat.predicted.fit.resub<-predict(object=temp$fits[[lambda.num]],newdata=housing.data)
+  error.test.dat.resub <- sum((housing.data$mdev-test.dat.predicted.fit.resub)^2)
+```
+
+With corresponding resubstitution estimate of $`r error.test.dat.resub`$. 
+
+
+### Adam's Code 
+
+```{r}
+<<kcomposite.thirds>>
+```
+
+
+
+```{r}
+temp2 <- composite.rpart.thirds(dat=housing.data,n.grid=20,mult=3,outvar="mdev")
+
+  plot(temp2$lambdas,temp2$error.lambdas,xlab="lambda",ylab="Optimism corrected error",
+       main="Thirds: Optimism corrected error vs. lambda for housing data")
+```
+The min of which is $`r temp2$lambdas[temp2$error.lambdas==min(temp2$error.lambdas)]`$. 
+
+
+The corresponding tree is: 
+```{r echo=FALSE, message = FALSE}
+  lambda.num<-which(temp2$error.lambdas==min(temp2$error.lambdas))
+  prp(temp2$fits[[ lambda.num]])
+   test.dat.predicted.fit.resub<-predict(object=temp2$fits[[lambda.num]],newdata=housing.data)
+  error.test.dat.resub <- sum((housing.data$mdev-test.dat.predicted.fit.resub)^2)
+```
+
+With corresponding resubstitution estimate of $`r error.test.dat.resub`$. 
+
+
+### Rob's Code 
+Comments from Rob:
+  
+  
+  One modification that I did make is to use a log-spline density estimator in place of a normal distribution for carrying out the parametric bootstrap; you need the package logspline from CRAN. This does quite a good job in capturing and then subsequently simulating data with a response profile that looks similar to the original (definitely better than the normal). But unfortunately the cross-validation curve that gets generated doesn’t really differ a lot from that obtained using the normal distribution. Not really sure what is going on here.
+
+The leave one out CV procedure has a clearly defined minimum for lambda for the housing data, at least over the range of lambdas I considered. The parametric bootstrap gives a local min that is in the same ballpark.  I haven’t looked at the corresponding composite response tree built using lambdas in this range. 
+
+If you run it, it will take a while (3-5 mins) since it does both LOO and parametric bootstrap CV (with 1000 replicates – 10 is way too small).
+
+Two other things:
+  
+  * I don’t think the original method for calculating the “root node” lambda is correct for the composite methods so right now we are stuck using a grid.
+* The composite response seems to have some potential to create heteroscedasticity – I think low variance predictions will generate composite responses with smaller variances compared to those with high variance predictions, for example. There has been some work on studying the performance of trees in this setting but I don’t know what kind of software might be out there to fit such trees.
+
+
+
+```{r}
+<<RobsComposite>>
+  ```
+
+```{r}
+temp3 <- composite.rpart.Grid(dat = housing.data, n.grid = 20, mult = 1, 
+                              uplim = 20, outvar = "mdev", prop.learning = 0.5)
+
+
+plot(temp3$lambdas, temp3$errorU.lambdas, xlab = "lambda", 
+     ylab = "apparent error", main = "apparent errorU (orig response) vs. lambda")
+plot(temp3$lambdas, temp3$Error.lambdas, xlab = "lambda", ylab = "Corrected error", 
+     main = "op-corr apparent errorU vs. lambda")
+plot(temp3$lambdas, temp3$error.lambdas, xlab = "lambda", ylab = "apparent error", 
+     main = "apparent error vs. lambda")
+plot(temp3$lambdas, temp3$CVError.lambdas, xlab = "lambda", 
+     ylab = "CV error", main = "CV-based error vs. lambda")
+
+
+```
+
+The corresponding tree is: 
+  ```{r echo=FALSE, message = FALSE}
+lambda.num<-which(temp3$CVError.lambdas==min(temp3$CVError.lambdas))
+prp(temp3$fits[[ lambda.num]])
+test.dat.predicted.fit.resub<-predict(object=temp3$fits[[lambda.num]],newdata=housing.data)
+error.test.dat.resub <- sum((housing.data$mdev-test.dat.predicted.fit.resub)^2)
+```
+
+
+With corresponding resubstitution estimate of $`r error.test.dat.resub`$. 
+
 \section{Appendix: Important background calculations}
 **Make sure learning/test is updated and that ${\cal M}$ is used for final model**
-\label{bkgrnd}
+  \label{bkgrnd}
 \subsection{Background for estimating $c_L$ and $c_R$}
 \label{Est}
 Let $\omega_i, i \geq 1$ be nonnegative weights, where at least one is
 positive. Let $\alpha_i, i \geq 1$ and $A_i, i \geq 1$ respectively be
 sequences of positive and real-valued constants. Let $Z_i, i \geq 1$
-be a sequence of random variables. Finally let $\lambda > 0$ be given
+  be a sequence of random variables. Finally let $\lambda > 0$ be given
 and consider the problem of minimizing
 \[
-Q(c) = {\textstyle \sum\nolimits}_i \omega_i \left[ (Z_{i}-c)^2 + \lambda \alpha_i (c-A_i)^2 \right]
-\]
+  Q(c) = {\textstyle \sum\nolimits}_i \omega_i \left[ (Z_{i}-c)^2 + \lambda \alpha_i (c-A_i)^2 \right]
+  \]
 in $c$.  If we differentiate $Q(c)$ with respect to $c$, set $Q'(c) = 0$, and solve for $c$, we obtain
 \[
 c(\lambda) = \frac{\sum_i \omega_i Z_i}{\lambda \sum_i \omega_i \alpha_i + \sum_i \omega_i}
@@ -575,150 +520,151 @@ r(\lambda) = \frac{\sum_i \omega_i}{\lambda \sum_i \omega_i \alpha_i + \sum_i \o
 and
 \begin{equation}
 \label{baralpha}
- \bar{\alpha} = \frac{\sum_i \omega_i \alpha_i}{\sum_i \omega_i}.
+\bar{\alpha} = \frac{\sum_i \omega_i \alpha_i}{\sum_i \omega_i}.
 \end{equation}
 Clearly, $r(\lambda) \in [0,1]$ and so this is just a shrinkage
 estimator that balances the observed weighted average (which we'd get
 if $\lambda = 0$)
 \[
- \frac{\sum_i \omega_i Z_i}{\sum_i \omega_i}
-\]
+  \frac{\sum_i \omega_i Z_i}{\sum_i \omega_i}
+  \]
 with the $\alpha-$modified weighted average of the $A$s
 \[
-\frac{ \sum_i \omega_i \alpha_i A_i}{ \sum_i \omega_i \alpha_i }.
-\]
+  \frac{ \sum_i \omega_i \alpha_i A_i}{ \sum_i \omega_i \alpha_i }.
+  \]
 (which we'd get as $\lambda \rightarrow \infty$).
-
-\subsection{Derivation of Within-Node Prediction Error}
-\label{PE}
-Now, let $\tilde{Z}$ be independent of $H = \{Z_i, i \geq 1\}.$ We can
-define the conditional prediction error using $c(\lambda)$ as
-\[
-CPE(\lambda) = E\left[ (\tilde Z - c(\lambda))^2 | H \right]
-\] 
-and the prediction error $PE(\lambda) = E_H\left[ CPE(\lambda)
+  
+  \subsection{Derivation of Within-Node Prediction Error}
+  \label{PE}
+  Now, let $\tilde{Z}$ be independent of $H = \{Z_i, i \geq 1\}.$ We can
+  define the conditional prediction error using $c(\lambda)$ as
+  \[
+  CPE(\lambda) = E\left[ (\tilde Z - c(\lambda))^2 | H \right]
+  \] 
+  and the prediction error $PE(\lambda) = E_H\left[ CPE(\lambda)
   \right]$ (here, $E_H$ denotes the expectation wrt distribution of
-$H$).  We would like to know what $\lambda$ minimizes
-$PE(\lambda)$. Note that $c(\lambda)$ is known given $H$ under the
-assumptions made at the beginning of the previous subsection.
-
-We can write
-\[
-(\tilde Z - c(\lambda))^2 = \tilde Z^2 - 2 \tilde Z c(\lambda) + [c(\lambda)]^2.
-\]
-Defining $\sigma^2_Z = var(\tilde Z)$ and $\mu_Z = E[\tilde Z]$ we have
-\[
-CPE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z c(\lambda) + [c(\lambda)]^2.
-\]
-Hence
-\[
-PE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z E_H[c(\lambda)] + E_H[[c(\lambda)]^2].
-\]
-Let $\mu_c(\lambda) = E_H[c(\lambda)]$ and $\sigma^2_c(\lambda) = var_H(c(\lambda))$ ; then, we can rewrite this last expression as
-\[
-PE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z \mu_c(\lambda) + \sigma^2_c(\lambda) + \mu^2_c(\lambda).
-\]
-Now, suppose $E[Z_i] = \delta$ for each $i$; then,
-\[
-\mu_c(\lambda) = r(\lambda) \delta+ K_1 (1-r(\lambda)).
-\]
-for
-\[
-K_1 =  \frac{ \sum_i \omega_i \alpha_i A_i}{ \sum_i \omega_i \alpha_i }.
-\]
-Similarly, if $var(Z_i) = \gamma$ for each $i,$ then
-\[
-var_c(\lambda) = r^2(\lambda) K_2 \gamma
-\]
-for 
-\[
-K_2 = \frac{ \sum_i \omega_i^2 }{[ \sum_i \omega_i]^2}
-\] 
-As result we may write
-\[
-PE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z [r(\lambda) \delta + K_1 (1-r(\lambda)) ] + 
-r^2(\lambda) K_2 \gamma + 
-[r(\lambda) \delta + K_1 (1-r(\lambda))]^2
-\]
-In the special case where $\delta = \mu_Z$ and $\gamma = \sigma^2_Z$,
-differentiating $PE(\lambda) = 0$ with respect to $\lambda$ and
-solving $PE'(\lambda) = 0$ gives
-\begin{equation}
-\label{lam-opt1}
-\lambda_0 = \frac{K_2 \sigma^2_Z}{ \bar{\alpha} (\mu_z - K_1)^2},
-\end{equation}
-where $\bar \alpha$ is given in \eqref{baralpha}.
-
-
-
-To connect the notation of the Aim2b set-up and the notation of
-Section \ref{bkgrnd}, let $\omega_i = I\{ W_{1i} \in Q_{v}(j,s) \},$
-$Z_i = Z_{1i}$ and $A_i = \hat Z_{1i}$. 
-
-
-
-\subsection{Alternative view of Strategy 2}.
-
-Let $\omega_i = I\{ W_{1i} \in Q_{v}(j,s) \},$ $Z_i = Z_{1i}$ and 
-$A_i= A_{v,j,s} I\{ W_{1i} \in Q_{v}(j,s) \}$ (i.e., $A_{v,j,s}$ doesn't
-depend on $i$ and thus is constant within node).  Then, the formulas
-\eqref{clambda}-\eqref{baralpha} of Section \ref{Est} give
- \[
-\widehat{c}_{v,j,s}(\lambda) = r_{v,j,s}(\lambda) \bar{Z}_v(j,s) +
-(1-r_{v,j,s}(\lambda)) \hat{\bar{A}}_{1v}(j,s),
-\]
-where $r_{v,j,s}(\lambda) = 1/(1 + \lambda \bar{\alpha}_{v,j,s}),$
-\[
-\hat{\bar{A}}_{1v}(j,s) =
-\{ \sum_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i  A_{v,j,s}  \}
-/ \{ \sum_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i \} = A_{v,j,s}
-\]
-and
-\[
-\bar{\alpha}_{v,j,s} =  n^{-1}_{v,j,s} \sum_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i
-\]
-where $n_{v,j,s} =  \sum_i I( W_{1i} \in Q_{v}(j,s) ).$
-
-Applying the results of Section \ref{PE} and assuming all expectation
-calculations are conditional on $W_{1i}, i \geq 1$ it can be shown that
-\[
-K_2 = n^{-1}_{v,j,s}
-\]
-and
-\[
-K_1 = A_{v,j,s}.
-\]
-Assuming that $E(Z_i) = \mu_Z$ and $var(Z_i) = \sigma^2_Z$ when 
-$I(W_{1i} \in Q_{v}(j,s) ) =1$ (i.e., constant mean and variance within a
-node), the ``best'' within-node choice of $\lambda$ via
-\eqref{lam-opt2} becomes
-\[
-\lambda_{opt} = \frac{n^{-1}_{v,j,s} \sigma^2_Z}{ \bar{\alpha}_{v,j,s} (\mu_z -  A_{v,j,s})^2}.
-\]
-
-Notice that selecting
-\[
-A_{v,j,s} = \hat{\bar{Z}}_{1v}(j,s) =
-\{ \sum_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i  \hat{Z}_{1i} \}
-/ \{ \sum_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i \}
-\]
-gives the same results as in the last section. Selecting instead
-\[
-A_{v,j,s} = \hat{\bar{Z}}_{1v}(j,s) =
-\{ \sum_i I(W_{1i} \in Q_{v}(j,s))  \hat{Z}_{1i} \}
-/ \{ \sum_i I(W_{1i} \in Q_{v}(j,s))  \}
-\]
-gives an alternative shrinkage target.  There are other choices as well.\\
-
-The point here is that Strategy 2 can be viewed as a procedure for
-shrinking the node-specific estimates towards some node-specific
-average predicted value.
-
-
-#To-Do List
-
-For the short term  
-1. Decide if want to use alternate shrinkage target or original  (the initial lambda is chosen based on root node with the alternate shrinkage target)  
-2. Update code so last column of data is not assumed to be outcome  
-3. Currently - can only have x as continuous - in aim2.split option for having categorical variables has not been coded.
-
+  $H$).  We would like to know what $\lambda$ minimizes
+  $PE(\lambda)$. Note that $c(\lambda)$ is known given $H$ under the
+  assumptions made at the beginning of the previous subsection.
+  
+  We can write
+  \[
+  (\tilde Z - c(\lambda))^2 = \tilde Z^2 - 2 \tilde Z c(\lambda) + [c(\lambda)]^2.
+  \]
+  Defining $\sigma^2_Z = var(\tilde Z)$ and $\mu_Z = E[\tilde Z]$ we have
+  \[
+  CPE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z c(\lambda) + [c(\lambda)]^2.
+  \]
+  Hence
+  \[
+  PE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z E_H[c(\lambda)] + E_H[[c(\lambda)]^2].
+  \]
+  Let $\mu_c(\lambda) = E_H[c(\lambda)]$ and $\sigma^2_c(\lambda) = var_H(c(\lambda))$ ; then, we can rewrite this last expression as
+  \[
+  PE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z \mu_c(\lambda) + \sigma^2_c(\lambda) + \mu^2_c(\lambda).
+  \]
+  Now, suppose $E[Z_i] = \delta$ for each $i$; then,
+  \[
+  \mu_c(\lambda) = r(\lambda) \delta+ K_1 (1-r(\lambda)).
+  \]
+  for
+  \[
+  K_1 =  \frac{ \sum_i \omega_i \alpha_i A_i}{ \sum_i \omega_i \alpha_i }.
+  \]
+  Similarly, if $var(Z_i) = \gamma$ for each $i,$ then
+  \[
+  var_c(\lambda) = r^2(\lambda) K_2 \gamma
+  \]
+  for 
+  \[
+  K_2 = \frac{ \sum_i \omega_i^2 }{[ \sum_i \omega_i]^2}
+  \] 
+  As result we may write
+  \[
+  PE(\lambda) = \sigma^2_Z + \mu^2_Z - 2 \mu_Z [r(\lambda) \delta + K_1 (1-r(\lambda)) ] + 
+  r^2(\lambda) K_2 \gamma + 
+  [r(\lambda) \delta + K_1 (1-r(\lambda))]^2
+  \]
+  In the special case where $\delta = \mu_Z$ and $\gamma = \sigma^2_Z$,
+  differentiating $PE(\lambda) = 0$ with respect to $\lambda$ and
+  solving $PE'(\lambda) = 0$ gives
+  \begin{equation}
+  \label{lam-opt1}
+  \lambda_0 = \frac{K_2 \sigma^2_Z}{ \bar{\alpha} (\mu_z - K_1)^2},
+  \end{equation}
+  where $\bar \alpha$ is given in \eqref{baralpha}.
+  
+  
+  
+  To connect the notation of the Aim2b set-up and the notation of
+  Section \ref{bkgrnd}, let $\omega_i = I\{ W_{1i} \in Q_{v}(j,s) \},$
+    $Z_i = Z_{1i}$ and $A_i = \hat Z_{1i}$. 
+  
+  
+  
+  \subsection{Alternative view of Strategy 2}.
+  
+  Let $\omega_i = I\{ W_{1i} \in Q_{v}(j,s) \},$ $Z_i = Z_{1i}$ and 
+  $A_i= A_{v,j,s} I\{ W_{1i} \in Q_{v}(j,s) \}$ (i.e., $A_{v,j,s}$ doesn't
+                                                 depend on $i$ and thus is constant within node).  Then, the formulas
+                                                 \eqref{clambda}-\eqref{baralpha} of Section \ref{Est} give
+                                                 \[
+                                                 \widehat{c}_{v,j,s}(\lambda) = r_{v,j,s}(\lambda) \bar{Z}_v(j,s) +
+                                                 (1-r_{v,j,s}(\lambda)) \hat{\bar{A}}_{1v}(j,s),
+                                                 \]
+                                                 where $r_{v,j,s}(\lambda) = 1/(1 + \lambda \bar{\alpha}_{v,j,s}),$
+                                                 \[
+                                                 \hat{\bar{A}}_{1v}(j,s) =
+                                                 \{ \sum_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i  A_{v,j,s}  \}
+                                                 / \{ \sum_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i \} = A_{v,j,s}
+                                                 \]
+                                                 and
+                                                 \[
+                                                 \bar{\alpha}_{v,j,s} =  n^{-1}_{v,j,s} \sum_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i
+                                                 \]
+                                                 where $n_{v,j,s} =  \sum_i I( W_{1i} \in Q_{v}(j,s) ).$
+                                                 
+                                                 Applying the results of Section \ref{PE} and assuming all expectation
+                                                 calculations are conditional on $W_{1i}, i \geq 1$ it can be shown that
+                                                 \[
+                                                 K_2 = n^{-1}_{v,j,s}
+                                                 \]
+                                                 and
+                                                 \[
+                                                 K_1 = A_{v,j,s}.
+                                                 \]
+                                                 Assuming that $E(Z_i) = \mu_Z$ and $var(Z_i) = \sigma^2_Z$ when 
+                                                 $I(W_{1i} \in Q_{v}(j,s) ) =1$ (i.e., constant mean and variance within a
+                                                 node), the ``best'' within-node choice of $\lambda$ via
+                                                 \eqref{lam-opt2} becomes
+                                                 \[
+                                                 \lambda_{opt} = \frac{n^{-1}_{v,j,s} \sigma^2_Z}{ \bar{\alpha}_{v,j,s} (\mu_z -  A_{v,j,s})^2}.
+                                                 \]
+                                                 
+                                                 Notice that selecting
+                                                 \[
+                                                 A_{v,j,s} = \hat{\bar{Z}}_{1v}(j,s) =
+                                                 \{ \sum_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i  \hat{Z}_{1i} \}
+                                                 / \{ \sum_i I(W_{1i} \in Q_{v}(j,s)) \alpha_i \}
+                                                 \]
+                                                 gives the same results as in the last section. Selecting instead
+                                                 \[
+                                                 A_{v,j,s} = \hat{\bar{Z}}_{1v}(j,s) =
+                                                 \{ \sum_i I(W_{1i} \in Q_{v}(j,s))  \hat{Z}_{1i} \}
+                                                 / \{ \sum_i I(W_{1i} \in Q_{v}(j,s))  \}
+                                                 \]
+                                                 gives an alternative shrinkage target.  There are other choices as well.\\
+                                                 
+                                                 The point here is that Strategy 2 can be viewed as a procedure for
+                                                 shrinking the node-specific estimates towards some node-specific
+                                                 average predicted value.
+                                                 
+                                                 
+                                                 #To-Do List
+                                                 
+                                                 For the short term  
+                                                 1. Decide if want to use alternate shrinkage target or original  (the initial lambda is chosen based on root node with the alternate shrinkage target)  
+                                                 2. Update code so last column of data is not assumed to be outcome  
+                                                 3. Currently - can only have x as continuous - in aim2.split option for having categorical variables has not been coded.
+                                                 
+                                                 

@@ -1,0 +1,214 @@
+---
+title: "Data Example with Kidney Data"
+author: "A, A, & R"
+date:  '`r format(Sys.time(), "%d %B, %Y")`'
+output: html_document
+---
+
+```{r echo=FALSE}
+library(knitr)
+read_chunk("/Users/annettemolinaro/Respository/Aim2/IntegratingCodeAndText_postAMM.R")
+```
+
+
+```{r }
+<<klibraries>>
+```
+
+
+```{r}
+ <<kaim2>>
+```
+
+
+```{r}
+<<kcorrected.lambda>> 
+```
+
+```{r}
+<<krpartfxs>>
+
+```
+
+## Example:  data
+For an example, we have the gen.data data. In the following block of text we read in the data, rename the columns, run the algorithm (via `aim2` function) and then plot the errors. 
+
+```{r}
+############ Fill in data info ####################
+dat <- read.csv("/Users/annettemolinaro/Box Sync/Projects/R01/Aim2/Data/covs.IHC.14genes.csv",as.is=TRUE)
+
+#848 have events, 800 are censored.
+dat3 <- dat2 <- dat[which(dat$dt==1),]
+
+dat3$surg_to_last_fu <- sqrt(dat3$surg_to_last_fu)
+
+dat4 <- dat3[,-which(colnames(dat3)=="rccdt"|colnames(dat3)=="dt")]
+dat4$height[which(dat4$height=="")]<-0
+dat4$height<-as.numeric(dat4$height)
+dat4$height[which(dat4$height==0)]<-NA
+table(dat$necrosis)
+dat4$necrosis<-as.numeric(as.factor(dat4$necrosis))
+dat4$male<-as.numeric(as.factor(dat4$male))
+#md.pattern(dat4)
+library(mice)
+dat.imput<-mice(dat4,m=5,maxit=5,method='pmm',seed=500,)
+
+dat.complete<-complete(dat.imput,1)
+dat.complete$Study_ID_1<-NULL
+dat.complete$mdev<-dat.complete$surg_to_last_fu
+dat.complete$surg_to_last_fu<-NULL
+#########################################################
+
+
+
+
+
+
+set.seed(12345)
+gen.data <- dat.complete
+
+temp <- aim2(dat=gen.data,nreps=1,n.grid=20,mult=2,outvar="mdev",prop.learning=0.5)
+
+  plot(temp$lambdas,temp$Error.lambdas,xlab="lambda",ylab="Optimism corrected error",
+       main="Optimism corrected error vs. lambda for housing data")
+```
+
+According to this plot, we would select the lambda equal to 
+$`r temp$lambdas[which(temp$Error.lambdas==min(temp$Error.lambdas))]`$ is the one which minimizes the optimism corrected error. Using that lambda we get the following rpart tree:
+
+```{r echo=FALSE, message = FALSE}
+  lambda.num<-which(temp$Error.lambdas==min(temp$Error.lambdas))
+  prp(temp$fits[[ lambda.num]])
+   test.dat.predicted.fit.resub<-predict(object=temp$fits[[lambda.num]],newdata=gen.data)
+  error.test.dat.resub <- sum((gen.data$mdev-test.dat.predicted.fit.resub)^2)
+```
+
+
+The resubstitution estimate of prediction error is $ `r  round(error.test.dat.resub,3)`$.   
+
+
+If we just ran a rpart tree:
+
+```{r}
+
+summary(justRpart<-rpart(mdev ~ .,data = gen.data)  )
+#prp(justRpart)
+min.CP<-justRpart$cptable[which(justRpart$cptable[,4]==min(justRpart$cptable[,4])),1]
+justRpartpruned<-prune(justRpart,cp=min.CP)
+prp(justRpartpruned)
+   rpart.test.dat.predicted.fit.resub<-predict(object=justRpartpruned,newdata=gen.data)
+  rpart.error.test.dat.resub <- sum((gen.data$mdev-rpart.test.dat.predicted.fit.resub)^2)
+```
+
+With prediction error $`r round(rpart.error.test.dat.resub,3)`$
+
+
+## Switching to Composite functions.
+At the moment we have three composite functions - the original we worked on in DC, the "thirds" version Adam has worked on and Rob's version which searches a grid and uses a logspline density for the bootstrap. 
+
+
+
+### DC Code 
+
+```{r}
+<<kcomposite>>
+
+```
+
+The  data with the DC Code looks like:
+
+
+```{r}
+temp <- composite.rpart(dat=gen.data,n.grid=50,mult=4,outvar="mdev")
+plot(temp$lambdas,temp$error.lambdas,xlab="lambda",ylab="Optimism corrected error",
+     main="DC Code: Optimism corrected error vs. lambda for housing data")
+```
+The min of which is$ `r temp$lambdas[temp$error.lambdas==min(temp$error.lambdas)]`$. 
+
+The corresponding tree is: 
+```{r echo=FALSE, message = FALSE}
+  lambda.num<-which(temp$error.lambdas==min(temp$error.lambdas))
+  prp(temp$fits[[ lambda.num]])
+   test.dat.predicted.fit.resub<-predict(object=temp$fits[[lambda.num]],newdata=gen.data)
+  error.test.dat.resub <- sum((gen.data$mdev-test.dat.predicted.fit.resub)^2)
+```
+
+With corresponding resubstitution estimate of $`r error.test.dat.resub`$. 
+
+
+### Adam's Code 
+
+```{r}
+<<kcomposite.thirds>>
+```
+
+
+
+```{r}
+temp2 <- composite.rpart.thirds(dat=gen.data,n.grid=20,mult=3,outvar="mdev")
+
+  plot(temp2$lambdas,temp2$error.lambdas,xlab="lambda",ylab="Optimism corrected error",
+       main="Thirds: Optimism corrected error vs. lambda for housing data")
+```
+The min of which is $`r temp2$lambdas[temp2$error.lambdas==min(temp2$error.lambdas)]`$. 
+
+
+The corresponding tree is: 
+```{r echo=FALSE, message = FALSE}
+  lambda.num<-which(temp2$error.lambdas==min(temp2$error.lambdas))
+  prp(temp2$fits[[ lambda.num]])
+   test.dat.predicted.fit.resub<-predict(object=temp2$fits[[lambda.num]],newdata=gen.data)
+  error.test.dat.resub <- sum((gen.data$mdev-test.dat.predicted.fit.resub)^2)
+```
+
+With corresponding resubstitution estimate of $`r error.test.dat.resub`$. 
+
+
+### Rob's Code 
+Comments from Rob:
+  
+  
+  One modification that I did make is to use a log-spline density estimator in place of a normal distribution for carrying out the parametric bootstrap; you need the package logspline from CRAN. This does quite a good job in capturing and then subsequently simulating data with a response profile that looks similar to the original (definitely better than the normal). But unfortunately the cross-validation curve that gets generated doesn’t really differ a lot from that obtained using the normal distribution. Not really sure what is going on here.
+
+The leave one out CV procedure has a clearly defined minimum for lambda for the housing data, at least over the range of lambdas I considered. The parametric bootstrap gives a local min that is in the same ballpark.  I haven’t looked at the corresponding composite response tree built using lambdas in this range. 
+
+If you run it, it will take a while (3-5 mins) since it does both LOO and parametric bootstrap CV (with 1000 replicates – 10 is way too small).
+
+Two other things:
+  
+  * I don’t think the original method for calculating the “root node” lambda is correct for the composite methods so right now we are stuck using a grid.
+* The composite response seems to have some potential to create heteroscedasticity – I think low variance predictions will generate composite responses with smaller variances compared to those with high variance predictions, for example. There has been some work on studying the performance of trees in this setting but I don’t know what kind of software might be out there to fit such trees.
+
+
+
+```{r}
+<<RobsComposite>>
+  ```
+
+```{r}
+temp3 <- composite.rpart.Grid(dat = gen.data, n.grid = 20, mult = 1, 
+                              uplim = 20, outvar = "mdev", prop.learning = 0.5)
+
+
+plot(temp3$lambdas, temp3$errorU.lambdas, xlab = "lambda", 
+     ylab = "apparent error", main = "apparent errorU (orig response) vs. lambda")
+plot(temp3$lambdas, temp3$Error.lambdas, xlab = "lambda", ylab = "Corrected error", 
+     main = "op-corr apparent errorU vs. lambda")
+plot(temp3$lambdas, temp3$error.lambdas, xlab = "lambda", ylab = "apparent error", 
+     main = "apparent error vs. lambda")
+plot(temp3$lambdas, temp3$CVError.lambdas, xlab = "lambda", 
+     ylab = "CV error", main = "CV-based error vs. lambda")
+
+
+```
+
+The corresponding tree is: 
+  ```{r echo=FALSE, message = FALSE}
+lambda.num<-which(temp3$CVError.lambdas==min(temp3$CVError.lambdas))
+prp(temp3$fits[[ lambda.num]])
+test.dat.predicted.fit.resub<-predict(object=temp3$fits[[lambda.num]],newdata=gen.data)
+error.test.dat.resub <- sum((gen.data$mdev-test.dat.predicted.fit.resub)^2)
+```
+
+
+With corresponding resubstitution estimate of $`r error.test.dat.resub`$. 
