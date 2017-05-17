@@ -228,7 +228,7 @@ composite.rpart=function(dat,n.grid=20,mult=2,outvar="Y",prop.learning=0.5)
   learning.dat <- dat[wlearn,]
   evaluation.dat <- dat[weval,]
 
-  fit.rf.learning <- randomForest(outvar.aim2 ~ .,data = learning.dat) # Fit RF with learning set
+  fit.rf.learning <- randomForest(outvar.aim2 ~ .,data = learning.dat,ntree=1000) # Fit RF with learning set
   predict.rf.evaluation <- predict(fit.rf.learning,newdata=evaluation.dat,predict.all=TRUE) #  $\widehat{Z}_{1i}$
   mean.evaluation <- mean(evaluation.dat$outvar.aim2) # $\mu_{Z_1}$
   var.evaluation <- var(evaluation.dat$outvar.aim2) # $\sigma^2_{Z_1}$
@@ -298,7 +298,8 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=FALSE
   discovery.dat <- dat[wdisc,]
   evaluation.dat <- dat[weval,]
 
-  fit.rf.learning <- randomForest(outvar.aim2 ~ .,data = learning.dat) # Fit RF with learning set
+  fit.rf.learning <- randomForest(outvar.aim2 ~ .,data = learning.dat, 
+                                  ntree = 1000) # Fit RF with learning set
   predict.rf.discovery <- predict(fit.rf.learning,newdata=discovery.dat,predict.all=TRUE) #  $\widehat{Z}_{1i}$
   mean.discovery <- mean(discovery.dat$outvar.aim2) # $\mu_{Z_1}$
   var.discovery <- var(discovery.dat$outvar.aim2) # $\sigma^2_{Z_1}$
