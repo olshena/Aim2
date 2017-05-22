@@ -375,6 +375,145 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=FALSE
   neval <- n-nlearn-ndisc
   samp <- sample(1:n,n,replace=FALSE)
 
+#  matrix.lambdas <- matrix(0,3,n.grid)
+  error.lambdas <- matrix(0,3,n.grid)
+
+                                        # Choose one set of lambdas in the beginning
+
+  n1 <- round(n/2)
+  n2 <- n-n1
+  samp2 <- sample(1:n,n,replace=FALSE)
+  which.n1 <- 1:n1
+  which.n2 <- (n1+1):n
+  wn1 <- sort(samp[which.n1])
+  wn2 <- sort(samp[which.n2])
+  n1.dat <- dat[wn1,]
+  n2.dat <- dat[wn2,]
+  
+  fit.rf.n1 <- randomForest(outvar.aim2 ~ .,data = n1.dat) # Fit RF with learning set
+  predict.rf.n2 <- predict(fit.rf.n1,newdata=n2.dat,predict.all=TRUE) #  $\widehat{Z}_{1i}$
+  mean.n2 <- mean(n2.dat$outvar.aim2) # $\mu_{Z_1}$
+  var.n2 <- var(n2.dat$outvar.aim2) # $\sigma^2_{Z_1}$
+  zbarhat <- mean(predict.rf.n2$aggregate) # $ \bar{\hat{Z_1}}$ 
+  var.z1s <-  apply(predict.rf.n2$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
+  alphas <- 1/var.z1s # $\alpha_i$
+                                        # alphas <- alphas/sum(alphas)
+  alphabar <- mean(alphas) # \bar{\alpha}$
+  lambda <- var.n2/(ndisc*alphabar*(mean.n2-zbarhat)^2) #with-in node #choice of \lambda
+  lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas
+
+  for(i in 1:3)
+  {
+      if(i==1)
+      {
+          which.learn <- 1:nlearn
+          which.disc <- (nlearn+1):(nlearn+ndisc)
+          which.eval <- (nlearn+ndisc+1):n
+      }
+      else if(i==2)
+      {
+          which.learn <- (nlearn+1):(nlearn+ndisc)
+          which.disc <- (nlearn+ndisc+1):n
+          which.eval <- 1:nlearn
+      }
+      else
+      {
+          which.learn <- (nlearn+ndisc+1):n 
+          which.disc <- 1:nlearn
+          which.eval <- (nlearn+1):(nlearn+ndisc)
+      }
+      
+      wlearn <- sort(samp[which.learn])
+      wdisc <- sort(samp[which.disc])
+      weval <- sort(samp[which.eval])
+  
+      learning.dat <- dat[wlearn,]
+      discovery.dat <- dat[wdisc,]
+      evaluation.dat <- dat[weval,]
+
+
+      fit.rf.learning <- randomForest(outvar.aim2 ~ .,data = learning.dat) # Fit RF with learning set
+      predict.rf.discovery <- predict(fit.rf.learning,newdata=discovery.dat,predict.all=TRUE) #  $\widehat{Z}_{1i}$
+      mean.discovery <- mean(discovery.dat$outvar.aim2) # $\mu_{Z_1}$
+      var.discovery <- var(discovery.dat$outvar.aim2) # $\sigma^2_{Z_1}$
+      zbarhat <- mean(predict.rf.discovery$aggregate) # $ \bar{\hat{Z_1}}$ 
+      var.z1s <-  apply(predict.rf.discovery$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
+      alphas <- 1/var.z1s # $\alpha_i$
+                                        # alphas <- alphas/sum(alphas)
+      alphabar <- mean(alphas) # \bar{\alpha}$
+#      lambda <- var.discovery/(ndisc*alphabar*(mean.discovery-zbarhat)^2) #with-in node 
+#                                        #choice of \lambda
+#      lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas
+
+      if(verbose)
+      {
+          print(paste("zbarhat =",zbarhat))
+          print(paste("mean.discovery =",mean.discovery))
+          print(paste("alphabar =",alphabar))
+          print(paste("neval =",neval))		  
+          print(paste("var.discovery =",var.discovery))
+          print(paste("lambda =",lambda))
+          print(paste("nlearn =",nlearn))
+          print(paste("ndisc =",ndisc))
+      }
+ #     lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas
+ #     matrix.lambdas[i,] <- lambdas
+      fits <- vector("list",n.grid)
+      pruneds <- vector("list",n.grid)
+      predictions <- vector("list",n.grid)
+      use.dat<-discovery.dat
+                                        # To get the err(\lambda) - uncorrected - currently equation 11
+      for(j in 1:n.grid)
+      {
+          new.lambda <- lambdas[j]
+          new.denom <- (1+alphas*new.lambda)
+          ri <- 1/new.denom
+          ci <- ri*use.dat$outvar.aim2 + (1-ri)*predict.rf.discovery$aggregate
+          new.use.dat <- use.dat
+          new.use.dat$outvar.aim2 <- ci
+          current.fit <- rpart(outvar.aim2 ~ .,data = new.use.dat)
+          min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1][1]
+          current.fit.pruned<-prune(current.fit,cp=min.CP)
+          predicted.fit <- predict(object=current.fit.pruned, newdata=evaluation.dat)
+          error.lambdas[i,j] <- sum((evaluation.dat$outvar.aim2-predicted.fit)^2)
+          fits[[j]] <- current.fit
+          pruneds[[j]] <- current.fit.pruned
+          predictions[[j]] <- predicted.fit
+      }
+  }
+  sum.lambdas <- apply(error.lambdas,2,sum)
+  top.lambda <- order(sum.lambdas)[1]
+  best.lambda <- lambdas[top.lambda]
+  fit.rf.all <- randomForest(outvar.aim2 ~ .,data = dat) # Fit RF with learning set
+  predict.rf.all <- predict(fit.rf.learning,newdata=dat,predict.all=TRUE) #  $\widehat{Z}_{1i}$
+  var.all <-  apply(predict.rf.all$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
+  alphas.all <- 1/var.all
+#  alphas.all <- alphas.all/sum(alphas.all)
+  new.denom <- (1+alphas.all*best.lambda)
+  ri <- 1/new.denom
+  ci <- ri*dat$outvar.aim2 + (1-ri)*predict(fit.rf.learning,newdata=dat)
+  dat$outvar.aim2 <- ci
+  current.fit <- rpart(outvar.aim2 ~ .,data = dat)
+  min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1][1]
+  current.fit.pruned<-prune(current.fit,cp=min.CP)
+  
+  list(best.lambda=best.lambda,lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,current.fit=current.fit,current.fit.pruned=current.fit.pruned,alphas=alphas.all,alphas.lambda=alphas.all*best.lambda,ri=ri)
+}
+
+## @knitr kcomposite.thirds.newer
+
+composite.rpart.thirds.newer <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=FALSE)
+{
+  n <- nrow(dat)
+  which.outcome <- which(colnames(dat)==outvar)
+  colnames(dat)[which.outcome] <- "outvar.aim2"	
+
+  #Split into learning and evaluation sets 
+  nlearn <- round(n/3)
+  ndisc <- round(n/3)
+  neval <- n-nlearn-ndisc
+  samp <- sample(1:n,n,replace=FALSE)
+
   matrix.lambdas <- matrix(0,3,n.grid)
   error.lambdas <- matrix(0,3,n.grid)
   
