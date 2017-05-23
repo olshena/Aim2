@@ -361,6 +361,7 @@ composite.rpart.thirds.old <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=F
   list(best.lambda=best.lambda,lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,current.fit=current.fit,current.fit.pruned=current.fit.pruned,alphas=alphas.all,alphas.lambda=alphas.all*best.lambda,ri=ri)
 }
 
+#this function, composite.rpart.thirds is the correct one
 ## @knitr kcomposite.thirds
 
 composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=FALSE)
@@ -496,7 +497,7 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=FALSE
   current.fit <- rpart(outvar.aim2 ~ .,data = dat)
   min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1][1]
   current.fit.pruned<-prune(current.fit,cp=min.CP)
-  
+# current.fit.pruned is the final model  
   list(best.lambda=best.lambda,lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,current.fit=current.fit,current.fit.pruned=current.fit.pruned,alphas=alphas.all,alphas.lambda=alphas.all*best.lambda,ri=ri)
 }
 
