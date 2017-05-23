@@ -228,7 +228,7 @@ composite.rpart=function(dat,n.grid=20,mult=2,outvar="Y",prop.learning=0.5)
   learning.dat <- dat[wlearn,]
   evaluation.dat <- dat[weval,]
 
-  fit.rf.learning <- randomForest(outvar.aim2 ~ .,data = learning.dat) # Fit RF with learning set
+  fit.rf.learning <- randomForest(outvar.aim2 ~ .,data = learning.dat,ntree=1000) # Fit RF with learning set
   predict.rf.evaluation <- predict(fit.rf.learning,newdata=evaluation.dat,predict.all=TRUE) #  $\widehat{Z}_{1i}$
   mean.evaluation <- mean(evaluation.dat$outvar.aim2) # $\mu_{Z_1}$
   var.evaluation <- var(evaluation.dat$outvar.aim2) # $\sigma^2_{Z_1}$
@@ -298,7 +298,8 @@ composite.rpart.thirds.old <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=F
   discovery.dat <- dat[wdisc,]
   evaluation.dat <- dat[weval,]
 
-  fit.rf.learning <- randomForest(outvar.aim2 ~ .,data = learning.dat) # Fit RF with learning set
+  fit.rf.learning <- randomForest(outvar.aim2 ~ .,data = learning.dat, 
+                                  ntree = 1000) # Fit RF with learning set
   predict.rf.discovery <- predict(fit.rf.learning,newdata=discovery.dat,predict.all=TRUE) #  $\widehat{Z}_{1i}$
   mean.discovery <- mean(discovery.dat$outvar.aim2) # $\mu_{Z_1}$
   var.discovery <- var(discovery.dat$outvar.aim2) # $\sigma^2_{Z_1}$
@@ -510,9 +511,9 @@ composite.rpart.thirds.newer <- function(dat,n.grid=20,mult=2,outvar="Y",verbose
   colnames(dat)[which.outcome] <- "outvar.aim2"	
 
   #Split into learning and evaluation sets 
-  nlearn <- round(n/3)
+  n.learn <- round(n/3)
   ndisc <- round(n/3)
-  neval <- n-nlearn-ndisc
+  neval <- n-n.learn-ndisc
   samp <- sample(1:n,n,replace=FALSE)
 
   matrix.lambdas <- matrix(0,3,n.grid)
@@ -523,20 +524,20 @@ composite.rpart.thirds.newer <- function(dat,n.grid=20,mult=2,outvar="Y",verbose
       if(i==1)
       {
           which.learn <- 1:n.learn
-          which.disc <- (nlearn+1):(nlearn+ndisc)
-          which.eval <- (nlearn+ndisc+1):n
+          which.disc <- (n.learn+1):(n.learn+ndisc)
+          which.eval <- (n.learn+ndisc+1):n
       }
       else if(i==2)
       {
-          which.learn <- (nlearn+1):(nlearn+ndisc)
-          which.disc <- (nlearn+ndisc+1):n
+          which.learn <- (n.learn+1):(n.learn+ndisc)
+          which.disc <- (n.learn+ndisc+1):n
           which.eval <- 1:n.learn
       }
       else
       {
-          which.learn <- (nlearn+ndisc+1):n 
+          which.learn <- (n.learn+ndisc+1):n 
           which.disc <- 1:n.learn
-          which.eval <- (nlearn+1):(nlearn+ndisc)
+          which.eval <- (n.learn+1):(n.learn+ndisc)
       }
       
       wlearn <- sort(samp[which.learn])
@@ -565,7 +566,7 @@ composite.rpart.thirds.newer <- function(dat,n.grid=20,mult=2,outvar="Y",verbose
           print(paste("neval =",neval))		  
           print(paste("var.discovery =",var.discovery))
           print(paste("lambda =",lambda))
-          print(paste("nlearn =",nlearn))
+          print(paste("nlearn =",n.learn))
           print(paste("ndisc =",ndisc))
       }
       lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas

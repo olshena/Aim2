@@ -102,13 +102,13 @@ where $n_{v,j,s} =  \sum_i I( W_{1i} \in Q_{v}(j,s) ).$
 
 
 The choice $\alpha^{-1}_i = \mbox{var}( \hat{Z}_{1i} )$ is probably
-best from an efficiency perpsective; hence the choice of
+best from an efficiency perspective; hence the choice of
 $\alpha_i = \hat{\gamma}^{-1}_{i}$ in the grant application text. Note that, given $\bar{\alpha}_{j,v,s},$  more weight is placed on
 $\hat{\bar{Z}}_{1v}(j,s)$ when $\lambda$ is larger; similarly, 
 given $\lambda$, more weight is placed on
 $\hat{\bar{Z}}_{1v}(j,s)$ when $\bar{\alpha}_{j,v,s}$ is larger.
 Both make sense in shrinking the parameter estimate
-towards this weighted mean function.\\
+towards this weighted mean function. \\
 
 To decide: 
 \begin{enumerate}
@@ -280,7 +280,7 @@ The main function is the `aim2` function which has calls:
   - **nreps** is set to 1 for the time being  
   - **ngrid** is the number of lambdas in the grid search  
   - **mult** is the number multiplied times the intial lambda which gives the maximum lambda in the grid search  
-  - **seed** fixes the random number generator for reproducibility  
+  - **seed** fixes the random number generator for reproducibility  -- This should be outside
   - **outvar** is the name of the outcome variable in the fitting  
 
 \paragraph{The output from the function `aim2 is:}
@@ -288,7 +288,7 @@ The main function is the `aim2` function which has calls:
 \item {\bf lambdas} are the values of lambda from grid search
 \item {\bf Error.lambdas} are the bootstrapped corrected errors from \eqref{optcor} 
 \item {\bf error.lambdas} is the apparent prediction error from \eqref{eq: errorLambda}
-\item {\bf optimism} is $2*\sum^{n_1}_i=1 C^*_i(\lambda)$ from the right hand side of sum in \eqref{optcor} 
+\item {\bf optimism} is $2*\sum^{n_1}_{i=1} C^*_i(\lambda)$ from the right hand side of sum in \eqref{optcor} 
 \item {\bf fits} are the new $\hat {\cal M}(W_{1i},\lambda)$ for the different lambdas
 \item {\bf predictions} are the predicted values for the evaluations set from $\hat {\cal M}(W_{1i},\lambda)$
 \item {\bf evaluation.dat} is the evaluation data 
