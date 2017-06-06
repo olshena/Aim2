@@ -1,8 +1,10 @@
 ---
 title: "Data Example with Kidney Data"
 author: "A, A, & R"
-date:  '`r format(Sys.time(), "%d %B, %Y")`'
-output: html_document
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r echo=FALSE}
@@ -51,7 +53,7 @@ dat4$necrosis<-as.numeric(as.factor(dat4$necrosis))
 dat4$male<-as.numeric(as.factor(dat4$male))
 #md.pattern(dat4)
 library(mice)
-dat.imput<-mice(dat4,m=5,maxit=5,method='pmm',seed=500,)
+dat.imput<-mice(dat4,m=5,maxit=5,method='pmm',seed=500,printFlag=FALSE)
 
 dat.complete<-complete(dat.imput,1)
 dat.complete$Study_ID_1<-NULL
@@ -91,7 +93,7 @@ If we just ran a rpart tree:
 
 ```{r}
 
-summary(justRpart<-rpart(mdev ~ .,data = gen.data)  )
+(justRpart<-rpart(mdev ~ .,data = gen.data)  )
 #prp(justRpart)
 min.CP<-justRpart$cptable[which(justRpart$cptable[,4]==min(justRpart$cptable[,4])),1]
 justRpartpruned<-prune(justRpart,cp=min.CP)
@@ -136,7 +138,7 @@ The corresponding tree is:
 With corresponding resubstitution estimate of $`r error.test.dat.resub`$. 
 
 
-### Adam's Code 
+### Third's Code 
 
 ```{r}
 <<kcomposite.thirds>>
@@ -145,19 +147,17 @@ With corresponding resubstitution estimate of $`r error.test.dat.resub`$.
 
 
 ```{r}
-temp2 <- composite.rpart.thirds(dat=gen.data,n.grid=20,mult=3,outvar="mdev")
+temp2 <- composite.rpart.thirds(dat=gen.data,n.grid=100,mult=4,outvar="mdev")
 
-  plot(temp2$lambdas,temp2$error.lambdas,xlab="lambda",ylab="Optimism corrected error",
-       main="Thirds: Optimism corrected error vs. lambda for housing data")
+  #plot(temp2$lambdas,temp2$error.lambdas,xlab="lambda",ylab="Optimism corrected error",
+  #     main="Thirds: Optimism corrected error vs. lambda for housing data")
 ```
-The min of which is $`r temp2$lambdas[temp2$error.lambdas==min(temp2$error.lambdas)]`$. 
 
 
 The corresponding tree is: 
 ```{r echo=FALSE, message = FALSE}
-  lambda.num<-which(temp2$error.lambdas==min(temp2$error.lambdas))
-  prp(temp2$fits[[ lambda.num]])
-   test.dat.predicted.fit.resub<-predict(object=temp2$fits[[lambda.num]],newdata=gen.data)
+  prp(temp2$current.fit.pruned)
+   test.dat.predicted.fit.resub<-predict(temp2$current.fit.pruned,newdata=gen.data)
   error.test.dat.resub <- sum((gen.data$mdev-test.dat.predicted.fit.resub)^2)
 ```
 
@@ -202,9 +202,22 @@ plot(temp3$lambdas, temp3$CVError.lambdas, xlab = "lambda",
 
 ```
 
-The corresponding tree is: 
+The corresponding tree is with CVError is: 
   ```{r echo=FALSE, message = FALSE}
 lambda.num<-which(temp3$CVError.lambdas==min(temp3$CVError.lambdas))
+prp(temp3$fits[[ lambda.num]])
+test.dat.predicted.fit.resub<-predict(object=temp3$fits[[lambda.num]],newdata=gen.data)
+error.test.dat.resub <- sum((gen.data$mdev-test.dat.predicted.fit.resub)^2)
+```
+
+
+With corresponding resubstitution estimate of $`r error.test.dat.resub`$. 
+
+
+
+The corresponding tree is with Error + Optimism is: 
+  ```{r echo=FALSE, message = FALSE}
+lambda.num<-which(temp3$Error.lambdas==min(temp3$Error.lambdas))
 prp(temp3$fits[[ lambda.num]])
 test.dat.predicted.fit.resub<-predict(object=temp3$fits[[lambda.num]],newdata=gen.data)
 error.test.dat.resub <- sum((gen.data$mdev-test.dat.predicted.fit.resub)^2)
