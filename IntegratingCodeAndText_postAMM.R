@@ -487,13 +487,13 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=FALSE
   top.lambda <- order(sum.lambdas)[1]
   best.lambda <- lambdas[top.lambda]
   fit.rf.all <- randomForest(outvar.aim2 ~ .,data = dat) # Fit RF with learning set
-  predict.rf.all <- predict(fit.rf.learning,newdata=dat,predict.all=TRUE) #  $\widehat{Z}_{1i}$
+  predict.rf.all <- predict(fit.rf.all,newdata=dat,predict.all=TRUE) #  $\widehat{Z}_{1i}$
   var.all <-  apply(predict.rf.all$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
   alphas.all <- 1/var.all
 #  alphas.all <- alphas.all/sum(alphas.all)
   new.denom <- (1+alphas.all*best.lambda)
   ri <- 1/new.denom
-  ci <- ri*dat$outvar.aim2 + (1-ri)*predict(fit.rf.learning,newdata=dat)
+  ci <- ri*dat$outvar.aim2 + (1-ri)*predict(fit.rf.all,newdata=dat)
   dat$outvar.aim2 <- ci
   current.fit <- rpart(outvar.aim2 ~ .,data = dat)
   min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1][1]
