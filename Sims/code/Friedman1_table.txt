@@ -1,0 +1,7 @@
+DC	Thirds	R_CV	R_OpErr	R_AppRes	R_AppCI
+	Min.   :0.001419  	Min.   :0.0001265  	Min.   :0.001837  	Min.   :0.001541  	Min.   :0.0002746  	Min.   :0.003046  
+	1st Qu.:0.097112  	1st Qu.:0.0214636  	1st Qu.:0.037544  	1st Qu.:0.042934  	1st Qu.:0.0277290  	1st Qu.:0.117957  
+	Median :0.153126  	Median :0.0535960  	Median :0.088540  	Median :0.087321  	Median :0.0962255  	Median :0.167732  
+	Mean   :0.269025  	Mean   :0.1016128  	Mean   :0.232600  	Mean   :0.224310  	Mean   :0.2502389  	Mean   :0.293619  
+	3rd Qu.:0.228996  	3rd Qu.:0.1367334  	3rd Qu.:0.174556  	3rd Qu.:0.150981  	3rd Qu.:0.2037513  	3rd Qu.:0.240954  
+	Max.   :2.772090  	Max.   :0.8213128  	Max.   :3.137200  	Max.   :2.844482  	Max.   :3.1364440  	Max.   :2.729173  

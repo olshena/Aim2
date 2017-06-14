@@ -1,0 +1,113 @@
+---
+title: "Simulation Results"
+author: "AMM"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(vioplot)
+setwd("/Users/annettemolinaro/Respository/Aim2/Sims")
+compdc.error<-read.table("friedman1_CompositeDC_ErrorToTruth.txt")
+compthirds.error<-read.table("friedman1_CompositeThirds_ErrorToTruth.txt")
+
+compRob.CVerror<-read.table("friedman1_CompositeRob_ErrorToTruth.txt")
+compRob.errorU<-read.table("friedman1_CompositeRob_ErrorToTruth.errorU.lambdas.txt")
+compRob.Error<-read.table("friedman1_CompositeRob_ErrorToTruth.ErrorOptimisim.Lambdas.txt")
+compRob.error<-read.table("friedman1_CompositeRob_ErrorToTruth.error.lambdas.txt")
+
+compdc.error.500<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeDC_ErrorToTruth.txt")
+compthirds.error.500<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeThirds_ErrorToTruth.txt")
+compRob.CVerror.500<-read.table("friedman1_500_CompositeRob_ErrorToTruth.txt")
+compRob.errorU.500<-read.table("friedman1_500_CompositeRob_ErrorToTruth.errorU.lambdas.txt")
+compRob.Error.500<-read.table("friedman1_500_CompositeRob_ErrorToTruth.ErrorOptimisim.Lambdas.txt")
+compRob.error.500<-read.table("friedman1_500_CompositeRob_ErrorToTruth.error.lambdas.txt")
+
+compdc.error.500.uplim<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeDC_Train500_uplim_ErrorToTruth.txt")
+compthirds.error.500.uplim<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeThirds_500_uplim_ErrorToTruth.txt")
+compRob.CVerror.500.uplim<-read.table("friedman1_500_CompositeRob_500_uplim_ErrorToTruth.txt")
+compRob.errorU.500.uplim<-read.table("friedman1_500_CompositeRob_500_uplim_ErrorToTruth.errorU.lambdas.txt")
+compRob.Error.500.uplim<-read.table("friedman1_500_CompositeRob_500_uplim_ErrorToTruth.ErrorOptimisim.Lambdas.txt")
+compRob.error.500.uplim<-read.table("friedman1_500_CompositeRob_500_uplim_ErrorToTruth.error.lambdas.txt")
+
+
+compdc.error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeDC_Train500_uplim_MinErrorLambda.txt")
+compthirds.error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeThirds_500_uplim_MinErrorLambda.txt")
+compRob.CVerror.500.uplim.lambda<-read.table("friedman1_500_CompositeRob_500_uplim_MinErrorLambda.txt")
+compRob.errorU.500.uplim.lambda<-read.table("friedman1_500_CompositeRob_500_uplim_MinErrorLambda.errorU.lambdas.txt")
+compRob.Error.500.uplim.lambda<-read.table("friedman1_500_CompositeRob_500_uplim_MinErrorLambda.ErrorOptimisim.Lambdas.txt")
+compRob.error.500.uplim.lambda<-read.table("friedman1_500_CompositeRob_500_uplim_MinErrorLambda.error.lambdas.txt")
+
+```
+
+## Friedman 1
+
+* $$X_{1}, \cdots,X_{9} \sim U(0,1)$$
+* $$ Y= 10 \sin(\pi X_1\ast X_2)+20(X_{3}-.5)^2+10X_4+5X_{5}+\epsilon$$
+* $$ \epsilon \sim N(0,1)$$
+
+
+For each we have a training set of size 250 and a test set of size 1000. 
+
+There are 500 simulations performed. 
+
+### Prediction error of difference between True outcome and predicted outcome.
+```{r,echo=FALSE}
+
+    xy<-cbind(compdc.error,compthirds.error,compRob.CVerror,compRob.Error,compRob.errorU,compRob.error)
+    name.vec <- c("DC","Thirds","R_CV","R_OpErr","R_AppRes","R_AppCI")
+    boxplot(xy,names=name.vec,ylab="Average Squared Error",main="Friedman 1")
+    vioplot(as.vector(unlist(compdc.error)),as.vector(unlist(compthirds.error)),as.vector(unlist(compRob.CVerror)),as.vector(unlist(compRob.Error)),as.vector(unlist(compRob.errorU)),as.vector(unlist(compRob.error)),names=name.vec)
+    
+    tabl <- cbind(summary(compdc.error),summary(compthirds.error),summary(compRob.CVerror),summary(compRob.Error),summary(compRob.errorU),summary(compRob.error))
+    colnames(tabl) <- name.vec
+    #write.table(tabl,"Friedman1_table.txt",sep="\t",row.names=TRUE,col.names=TRUE,quote=FALSE)
+    tabl
+```
+
+### With 500 in the training set and 1000 in the test set
+### Prediction error of difference between True outcome and predicted outcome.
+```{r,echo=FALSE}
+
+    xy.500<-cbind(unlist(compdc.error.500)[1:966],unlist(compthirds.error.500)[1:966],unlist(compRob.CVerror.500),unlist(compRob.Error.500),unlist(compRob.errorU.500),unlist(compRob.error.500))
+    name.vec <- c("DC","Thirds","R_CV","R_OpErr","R_AppRes","R_AppCI")
+    boxplot(xy.500,names=name.vec,ylab="Average Squared Error",main="Friedman 1")
+    vioplot(as.vector(unlist(compdc.error.500)),as.vector(unlist(compthirds.error.500)),as.vector(unlist(compRob.CVerror.500)),as.vector(unlist(compRob.Error.500)),as.vector(unlist(compRob.errorU.500)),as.vector(unlist(compRob.error.500)),names=name.vec)
+    
+    tabl <- cbind(summary(compdc.error.500),summary(compthirds.error.500),summary(compRob.CVerror.500),summary(compRob.Error.500),summary(compRob.errorU.500),summary(compRob.error.500))
+    colnames(tabl) <- name.vec
+    #write.table(tabl,"Friedman1_table.txt",sep="\t",row.names=TRUE,col.names=TRUE,quote=FALSE)
+    tabl
+```
+
+
+
+
+### With 500 in the training set and 1000 in the test set and a grid for lambda
+### Prediction error of difference between True outcome and predicted outcome.
+```{r,echo=FALSE}
+
+    xy.500.uplim<-cbind(unlist(compdc.error.500.uplim)[1:484],unlist(compthirds.error.500.uplim)[1:484],unlist(compRob.CVerror.500.uplim),unlist(compRob.Error.500.uplim),unlist(compRob.errorU.500.uplim),unlist(compRob.error.500.uplim))
+    name.vec <- c("DC","Thirds","R_CV","R_OpErr","R_AppRes","R_AppCI")
+    boxplot(xy.500.uplim,names=name.vec,ylab="Average Squared Error",main="Friedman 1")
+    vioplot(as.vector(unlist(compdc.error.500.uplim)),as.vector(unlist(compthirds.error.500.uplim)),as.vector(unlist(compRob.CVerror.500.uplim)),as.vector(unlist(compRob.Error.500.uplim)),as.vector(unlist(compRob.errorU.500.uplim)),as.vector(unlist(compRob.error.500.uplim)),names=name.vec)
+    
+    tabl <- cbind(summary(compdc.error.500.uplim),summary(compthirds.error.500.uplim),summary(compRob.CVerror.500.uplim),summary(compRob.Error.500.uplim),summary(compRob.errorU.500.uplim),summary(compRob.error.500.uplim))
+    colnames(tabl) <- name.vec
+    #write.table(tabl,"Friedman1_table.txt",sep="\t",row.names=TRUE,col.names=TRUE,quote=FALSE)
+    tabl
+    
+    unlist(compthirds.error.500.uplim.lambda)[1:484],
+      lambda.500.uplim<-cbind(unlist(compdc.error.500.uplim.lambda)[1:484],unlist(compRob.CVerror.500.uplim.lambda),unlist(compRob.Error.500.uplim.lambda),unlist(compRob.errorU.500.uplim.lambda),unlist(compRob.error.500.uplim.lambda))
+    name.vec <- c("DC","R_CV","R_OpErr","R_AppRes","R_AppCI")
+    boxplot(lambda.500.uplim,names=name.vec,ylab="Average Squared Error",main="Friedman 1")
+    
+    as.vector(unlist(compthirds.error.500.uplim.lambda)),
+    vioplot(as.vector(unlist(compdc.error.500.uplim.lambda)),as.vector(unlist(compRob.CVerror.500.uplim.lambda)),as.vector(unlist(compRob.Error.500.uplim.lambda)),as.vector(unlist(compRob.errorU.500.uplim.lambda)),as.vector(unlist(compRob.error.500.uplim.lambda)),names=name.vec)
+    
+    tabl <- cbind(summary(compdc.error.500.uplim.lambda),summary(compthirds.error.500.uplim.lambda),summary(compRob.CVerror.500.uplim.lambda),summary(compRob.Error.500.uplim.lambda),summary(compRob.errorU.500.uplim.lambda),summary(compRob.error.500.uplim.lambda))
+    colnames(tabl) <- name.vec
+    #write.table(tabl,"Friedman1_table.txt",sep="\t",row.names=TRUE,col.names=TRUE,quote=FALSE)
+    tabl
+```

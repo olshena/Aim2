@@ -213,7 +213,7 @@ aim2.text <- function(yval, dev, wt, ylevel, digits, n, use.n )
 
 ## @knitr kcomposite
 
-composite.rpart=function(dat,n.grid=20,mult=2,outvar="Y",prop.learning=0.5)
+composite.rpart=function(dat,n.grid=20,mult=2,uplim=0,outvar="Y",prop.learning=0.5)
 {
   n <- nrow(dat)
   which.outcome <- which(colnames(dat)==outvar)
@@ -239,7 +239,10 @@ composite.rpart=function(dat,n.grid=20,mult=2,outvar="Y",prop.learning=0.5)
   lambda <- var.evaluation/(neval*alphabar*(mean.evaluation-zbarhat)^2) #with-in node 
                                                                         #choice of \lambda
   #print(paste("lambda =",lambda)) 									
-  lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas
+  if(uplim==0){
+    lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas
+  }else {lambdas <- seq(0,uplim,length.out=n.grid) }
+  
   n.lambdas <- length(lambdas) #length of list
   error.lambdas <- rep(0,length(lambdas)) 
   fits <- vector("list",n.lambdas)
@@ -365,7 +368,7 @@ composite.rpart.thirds.old <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=F
 #this function, composite.rpart.thirds is the correct one
 ## @knitr kcomposite.thirds
 
-composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=FALSE)
+composite.rpart.thirds <- function(dat,n.grid=20,mult=2,uplim = 0,outvar="Y",verbose=FALSE)
 {
   n <- nrow(dat)
   which.outcome <- which(colnames(dat)==outvar)
@@ -381,29 +384,32 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=FALSE
   error.lambdas <- matrix(0,3,n.grid)
 
                                         # Choose one set of lambdas in the beginning
-
-  n1 <- round(n/2)
-  n2 <- n-n1
-  samp2 <- sample(1:n,n,replace=FALSE)
-  which.n1 <- 1:n1
-  which.n2 <- (n1+1):n
-  wn1 <- sort(samp[which.n1])
-  wn2 <- sort(samp[which.n2])
-  n1.dat <- dat[wn1,]
-  n2.dat <- dat[wn2,]
+  if(uplim==0){
+    n1 <- round(n/2)
+    n2 <- n-n1
+    samp2 <- sample(1:n,n,replace=FALSE)
+    which.n1 <- 1:n1
+    which.n2 <- (n1+1):n
+    wn1 <- sort(samp[which.n1])
+    wn2 <- sort(samp[which.n2])
+    n1.dat <- dat[wn1,]
+    n2.dat <- dat[wn2,]
+    
+    fit.rf.n1 <- randomForest(outvar.aim2 ~ .,data = n1.dat) # Fit RF with learning set
+    predict.rf.n2 <- predict(fit.rf.n1,newdata=n2.dat,predict.all=TRUE) #  $\widehat{Z}_{1i}$
+    mean.n2 <- mean(n2.dat$outvar.aim2) # $\mu_{Z_1}$
+    var.n2 <- var(n2.dat$outvar.aim2) # $\sigma^2_{Z_1}$
+    zbarhat <- mean(predict.rf.n2$aggregate) # $ \bar{\hat{Z_1}}$ 
+    var.z1s <-  apply(predict.rf.n2$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
+    alphas <- 1/var.z1s # $\alpha_i$
+                                          # alphas <- alphas/sum(alphas)
+    alphabar <- mean(alphas) # \bar{\alpha}$
+    lambda <- var.n2/(ndisc*alphabar*(mean.n2-zbarhat)^2) #with-in node #choice of \lambda
+    lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas
+  }else{
+    lambdas <- seq(0,uplim,length.out=n.grid)  # list of possible lambdas
+  }
   
-  fit.rf.n1 <- randomForest(outvar.aim2 ~ .,data = n1.dat) # Fit RF with learning set
-  predict.rf.n2 <- predict(fit.rf.n1,newdata=n2.dat,predict.all=TRUE) #  $\widehat{Z}_{1i}$
-  mean.n2 <- mean(n2.dat$outvar.aim2) # $\mu_{Z_1}$
-  var.n2 <- var(n2.dat$outvar.aim2) # $\sigma^2_{Z_1}$
-  zbarhat <- mean(predict.rf.n2$aggregate) # $ \bar{\hat{Z_1}}$ 
-  var.z1s <-  apply(predict.rf.n2$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
-  alphas <- 1/var.z1s # $\alpha_i$
-                                        # alphas <- alphas/sum(alphas)
-  alphabar <- mean(alphas) # \bar{\alpha}$
-  lambda <- var.n2/(ndisc*alphabar*(mean.n2-zbarhat)^2) #with-in node #choice of \lambda
-  lambdas <- seq(0,mult*lambda,length.out=n.grid)  # list of possible lambdas
-
   for(i in 1:3)
   {
       if(i==1)
@@ -454,7 +460,7 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=FALSE
           print(paste("alphabar =",alphabar))
           print(paste("neval =",neval))		  
           print(paste("var.discovery =",var.discovery))
-          print(paste("lambda =",lambda))
+          #print(paste("lambda =",lambda))
           print(paste("nlearn =",nlearn))
           print(paste("ndisc =",ndisc))
       }
@@ -499,7 +505,7 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=FALSE
   min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1][1]
   current.fit.pruned<-prune(current.fit,cp=min.CP)
 # current.fit.pruned is the final model  
-  list(best.lambda=best.lambda,lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,current.fit=current.fit,current.fit.pruned=current.fit.pruned,alphas=alphas.all,alphas.lambda=alphas.all*best.lambda,ri=ri)
+  list(best.lambda=best.lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,current.fit=current.fit,current.fit.pruned=current.fit.pruned,alphas=alphas.all,alphas.lambda=alphas.all*best.lambda,ri=ri)
 }
 
 ## @knitr kcomposite.thirds.newer

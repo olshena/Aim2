@@ -1,0 +1,39 @@
+cat CompositeDC/sim1_notag_CompositeDC_*ErrorToTruth* > friedman1_CompositeDC_ErrorToTruth.txt
+cat CompositeThirds/sim1_notag_CompositeThirds_*ErrorToTruth* > friedman1_CompositeThirds_ErrorToTruth.txt
+cat CompositeRob/sim1_notag_CompositeRob_ErrorToTruthCurrent_* > friedman1_CompositeRob_ErrorToTruth.txt
+cat CompositeRob/sim1_notag_CompositeRob_ErrorToTruthCurrent.ErrorOptimisim.lambdas_* > friedman1_CompositeRob_ErrorToTruth.ErrorOptimisim.Lambdas.txt
+cat CompositeRob/sim1_notag_CompositeRob_ErrorToTruthCurrent.errorU.lambdas_* > friedman1_CompositeRob_ErrorToTruth.errorU.lambdas.txt
+cat CompositeRob/sim1_notag_CompositeRob_ErrorToTruthCurrent.error.lambdas_* > friedman1_CompositeRob_ErrorToTruth.error.lambdas.txt
+
+
+# with 500 in training set
+
+
+cat CompositeDC/sim1_500_CompositeDC_*ErrorToTruth* > friedman1_500_CompositeDC_ErrorToTruth.txt
+cat CompositeThirds/sim1_500_CompositeThirds_*ErrorToTruth* > friedman1_500_CompositeThirds_ErrorToTruth.txt
+cat CompositeRob/sim1_500_CompositeRob_*ErrorToTruthCurrent_* > friedman1_500_CompositeRob_ErrorToTruth.txt
+cat CompositeRob/sim1_500_CompositeRob_*ErrorToTruthCurrent.ErrorOptimisim.lambdas_* > friedman1_500_CompositeRob_ErrorToTruth.ErrorOptimisim.Lambdas.txt
+cat CompositeRob/sim1_500_CompositeRob_*ErrorToTruthCurrent.errorU.lambdas_* > friedman1_500_CompositeRob_ErrorToTruth.errorU.lambdas.txt
+cat CompositeRob/sim1_500_CompositeRob_*ErrorToTruthCurrent.error.lambdas_* > friedman1_500_CompositeRob_ErrorToTruth.error.lambdas.txt
+
+
+
+
+# with 500 in training set  and the same lambda grid
+
+
+cat CompositeDC/sim1_500_CompositeDC_Train500_uplim_*ErrorToTruth* > friedman1_500_CompositeDC_Train500_uplim_ErrorToTruth.txt
+cat CompositeThirds/sim1_500_CompositeThirds_500_uplim_*ErrorToTruth* > friedman1_500_CompositeThirds_500_uplim_ErrorToTruth.txt
+cat CompositeRob/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent_* > friedman1_500_CompositeRob_500_uplim_ErrorToTruth.txt
+cat CompositeRob/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent.ErrorOptimisim.lambdas_* > friedman1_500_CompositeRob_500_uplim_ErrorToTruth.ErrorOptimisim.Lambdas.txt
+cat CompositeRob/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent.errorU.lambdas_* > friedman1_500_CompositeRob_500_uplim_ErrorToTruth.errorU.lambdas.txt
+cat CompositeRob/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent.error.lambdas_* > friedman1_500_CompositeRob_500_uplim_ErrorToTruth.error.lambdas.txt
+
+
+
+cat CompositeDC/sim1_500_CompositeDC_Train500_uplim_*MinErrorLambda* > friedman1_500_CompositeDC_Train500_uplim_MinErrorLambda.txt
+cat CompositeThirds/sim1_500_CompositeThirds_500_uplim_*MinErrorLambda* > friedman1_500_CompositeThirds_500_uplim_MinErrorLambda.txt
+cat CompositeRob/sim1_500_CompositeRob_500_uplim_MinErrorLambda* > friedman1_500_CompositeRob_500_uplim_MinErrorLambda.txt
+cat CompositeRob/sim1_500_CompositeRob_500_uplim_MinErrorLambda_ErrorOptimisim.lambdas_* > friedman1_500_CompositeRob_500_uplim_MinErrorLambda.ErrorOptimisim.Lambdas.txt
+cat CompositeRob/sim1_500_CompositeRob_500_uplim_MinErrorLambda_errorU.lambdas_* > friedman1_500_CompositeRob_500_uplim_MinErrorLambda.errorU.lambdas.txt
+cat CompositeRob/sim1_500_CompositeRob_500_uplim_MinErrorLambda_error.lambdas_* > friedman1_500_CompositeRob_500_uplim_MinErrorLambda.error.lambdas.txt
