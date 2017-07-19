@@ -26,18 +26,18 @@ compRob.error.500<-read.table("friedman1_500_CompositeRob_ErrorToTruth.error.lam
 
 compdc.error.500.uplim<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeDC_Train500_uplim_ErrorToTruth.txt")
 compthirds.error.500.uplim<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeThirds_500_uplim_ErrorToTruth.txt")
-compRob.CVerror.500.uplim<-read.table("friedman1_500_CompositeRob_500_uplim_ErrorToTruth.txt")
-compRob.errorU.500.uplim<-read.table("friedman1_500_CompositeRob_500_uplim_ErrorToTruth.errorU.lambdas.txt")
-compRob.Error.500.uplim<-read.table("friedman1_500_CompositeRob_500_uplim_ErrorToTruth.ErrorOptimisim.Lambdas.txt")
-compRob.error.500.uplim<-read.table("friedman1_500_CompositeRob_500_uplim_ErrorToTruth.error.lambdas.txt")
+compRob.CVerror.500.uplim<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_ErrorToTruth.txt")
+compRob.errorU.500.uplim<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_ErrorToTruth.errorU.lambdas.txt")
+compRob.Error.500.uplim<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_ErrorToTruth.ErrorOptimisim.Lambdas.txt")
+compRob.error.500.uplim<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_ErrorToTruth.error.lambdas.txt")
 
 
 compdc.error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeDC_Train500_uplim_MinErrorLambda.txt")
 compthirds.error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeThirds_500_uplim_MinErrorLambda.txt")
-compRob.CVerror.500.uplim.lambda<-read.table("friedman1_500_CompositeRob_500_uplim_MinErrorLambda.txt")
-compRob.errorU.500.uplim.lambda<-read.table("friedman1_500_CompositeRob_500_uplim_MinErrorLambda.errorU.lambdas.txt")
-compRob.Error.500.uplim.lambda<-read.table("friedman1_500_CompositeRob_500_uplim_MinErrorLambda.ErrorOptimisim.Lambdas.txt")
-compRob.error.500.uplim.lambda<-read.table("friedman1_500_CompositeRob_500_uplim_MinErrorLambda.error.lambdas.txt")
+compRob.CVerror.500.uplim.lambda<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_MinErrorLambda.txt")
+compRob.errorU.500.uplim.lambda<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_MinErrorLambda.errorU.lambdas.txt")
+compRob.Error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_MinErrorLambda.ErrorOptimisim.Lambdas.txt")
+compRob.error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_MinErrorLambda.error.lambdas.txt")
 
 ```
 
@@ -88,7 +88,7 @@ There are 500 simulations performed.
 ### Prediction error of difference between True outcome and predicted outcome.
 ```{r,echo=FALSE}
 
-    xy.500.uplim<-cbind(unlist(compdc.error.500.uplim)[1:484],unlist(compthirds.error.500.uplim)[1:484],unlist(compRob.CVerror.500.uplim),unlist(compRob.Error.500.uplim),unlist(compRob.errorU.500.uplim),unlist(compRob.error.500.uplim))
+    xy.500.uplim<-cbind(unlist(compdc.error.500.uplim),unlist(compthirds.error.500.uplim),unlist(compRob.CVerror.500.uplim),unlist(compRob.Error.500.uplim),unlist(compRob.errorU.500.uplim),unlist(compRob.error.500.uplim))
     name.vec <- c("DC","Thirds","R_CV","R_OpErr","R_AppRes","R_AppCI")
     boxplot(xy.500.uplim,names=name.vec,ylab="Average Squared Error",main="Friedman 1")
     vioplot(as.vector(unlist(compdc.error.500.uplim)),as.vector(unlist(compthirds.error.500.uplim)),as.vector(unlist(compRob.CVerror.500.uplim)),as.vector(unlist(compRob.Error.500.uplim)),as.vector(unlist(compRob.errorU.500.uplim)),as.vector(unlist(compRob.error.500.uplim)),names=name.vec)
@@ -98,8 +98,8 @@ There are 500 simulations performed.
     #write.table(tabl,"Friedman1_table.txt",sep="\t",row.names=TRUE,col.names=TRUE,quote=FALSE)
     tabl
     
-    unlist(compthirds.error.500.uplim.lambda)[1:484],
-      lambda.500.uplim<-cbind(unlist(compdc.error.500.uplim.lambda)[1:484],unlist(compRob.CVerror.500.uplim.lambda),unlist(compRob.Error.500.uplim.lambda),unlist(compRob.errorU.500.uplim.lambda),unlist(compRob.error.500.uplim.lambda))
+ 
+      lambda.500.uplim<-cbind(unlist(compdc.error.500.uplim.lambda)[1:500],unlist(compthirds.error.500.uplim.lambda),unlist(compRob.CVerror.500.uplim.lambda),unlist(compRob.Error.500.uplim.lambda),unlist(compRob.errorU.500.uplim.lambda),unlist(compRob.error.500.uplim.lambda))
     name.vec <- c("DC","R_CV","R_OpErr","R_AppRes","R_AppCI")
     boxplot(lambda.500.uplim,names=name.vec,ylab="Average Squared Error",main="Friedman 1")
     

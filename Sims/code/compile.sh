@@ -30,7 +30,6 @@ cat CompositeRob/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent.errorU.lam
 cat CompositeRob/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent.error.lambdas_* > friedman1_500_CompositeRob_500_uplim_ErrorToTruth.error.lambdas.txt
 
 
-
 cat CompositeDC/sim1_500_CompositeDC_Train500_uplim_*MinErrorLambda* > friedman1_500_CompositeDC_Train500_uplim_MinErrorLambda.txt
 cat CompositeThirds/sim1_500_CompositeThirds_500_uplim_*MinErrorLambda* > friedman1_500_CompositeThirds_500_uplim_MinErrorLambda.txt
 cat CompositeRob/sim1_500_CompositeRob_500_uplim_MinErrorLambda* > friedman1_500_CompositeRob_500_uplim_MinErrorLambda.txt
