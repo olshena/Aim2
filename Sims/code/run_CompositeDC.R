@@ -3,7 +3,7 @@ library("R.utils")
 library("listenv")
 library("future")
 
-source("/Users/annettemolinaro/Respository/Aim2/IntegratingCodeAndText_postAMM.R")
+source("/Users/annettemolinaro/Repository/Aim2/IntegratingCodeAndText_postAMM.R")
 
 
 model<-cmdArg(model="sim1")

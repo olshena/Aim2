@@ -32,7 +32,7 @@ compRob.Error.500.uplim<-read.table("/Users/annettemolinaro/Respository/Aim2/Sim
 compRob.error.500.uplim<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_ErrorToTruth.error.lambdas.txt")
 
 
-compdc.error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeDC_Train500_uplim_MinErrorLambda.txt")
+compdc.error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeDC_Train500_uplim_MinErrorLambda.txt")[1:500,]
 compthirds.error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeThirds_500_uplim_MinErrorLambda.txt")
 compRob.CVerror.500.uplim.lambda<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_MinErrorLambda.txt")
 compRob.errorU.500.uplim.lambda<-read.table("/Users/annettemolinaro/Respository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_MinErrorLambda.errorU.lambdas.txt")

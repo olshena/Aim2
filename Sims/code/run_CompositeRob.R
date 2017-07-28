@@ -3,7 +3,7 @@ library("R.utils")
 library("listenv")
 library("future")
 
-source("/Users/annettemolinaro/Respository/Aim2/IntegratingCodeAndText_postAMM.R")
+source("/Users/annettemolinaro/Repository/Aim2/IntegratingCodeAndText_postAMM.R")
 
 
 model<-cmdArg(model="sim1")
@@ -34,7 +34,7 @@ for (idx in 1:n.simulations)
 
   #CV Error
   lambda.num<-which(Model$CVError.lambdas==min(Model$CVError.lambdas))
-  MinErrorLambda<-Model$CVError.lambdas[lambda.num]
+  MinErrorLambda<-Model$lambdas[lambda.num]
   PredictedValuesCurrent<-predict(object=Model$fits[[lambda.num]],newdata=test.data)
   ErrorToTruthCurrent<-(sum(( PredictedValuesCurrent - as.matrix(test.truth))^2))/n.test
   
@@ -44,7 +44,7 @@ for (idx in 1:n.simulations)
   
   # Op-Corr apparent error
   lambda.num<-which(Model$Error.lambdas==min(Model$Error.lambdas))
-  MinErrorLambda<-Model$Error.lambdas[lambda.num]
+  MinErrorLambda<-Model$lambdas[lambda.num]
   PredictedValuesCurrent<-predict(object=Model$fits[[lambda.num]],newdata=test.data)
   ErrorToTruthCurrent<-(sum(( PredictedValuesCurrent - as.matrix(test.truth))^2))/n.test
   
@@ -54,7 +54,7 @@ for (idx in 1:n.simulations)
   
   # 'apparent error' using actual response
   lambda.num<-which(Model$errorU.lambdas==min(Model$errorU.lambdas))
-  MinErrorLambda<-Model$errorU.lambdas[lambda.num]
+  MinErrorLambda<-Model$lambdas[lambda.num]
   PredictedValuesCurrent<-predict(object=Model$fits[[lambda.num]],newdata=test.data)
   ErrorToTruthCurrent<-(sum(( PredictedValuesCurrent - as.matrix(test.truth))^2))/n.test
   
@@ -64,7 +64,7 @@ for (idx in 1:n.simulations)
 
     # 'apparent error' using ci response
   lambda.num<-which(Model$error.lambdas==min(Model$error.lambdas))
-  MinErrorLambda<-Model$error.lambdas[lambda.num]
+  MinErrorLambda<-Model$lambdas[lambda.num]
   PredictedValuesCurrent<-predict(object=Model$fits[[lambda.num]],newdata=test.data)
   ErrorToTruthCurrent<-(sum(( PredictedValuesCurrent - as.matrix(test.truth))^2))/n.test
   

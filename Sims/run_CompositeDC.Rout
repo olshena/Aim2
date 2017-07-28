@@ -1,7 +1,7 @@
 
-R version 3.4.0 (2017-04-21) -- "You Stupid Darkness"
+R version 3.3.3 (2017-03-06) -- "Another Canoe"
 Copyright (C) 2017 The R Foundation for Statistical Computing
-Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
@@ -51,7 +51,7 @@ The following objects are masked from ‘package:base’:
 > library("listenv")
 > library("future")
 > 
-> source("/Users/annettemolinaro/Respository/Aim2/IntegratingCodeAndText_postAMM.R")
+> source("/Users/annettemolinaro/Repository/Aim2/IntegratingCodeAndText_postAMM.R")
 randomForest 4.6-12
 Type rfNews() to see new features/changes/bug fixes.
 > 
@@ -3094,4 +3094,6 @@ Read 1000 items
 > 
 > proc.time()
    user  system elapsed 
-338.055   8.312 347.676 
+539.835  22.106 640.227 
+Warning message:
+In .Last() : bytecode version mismatch; using eval
