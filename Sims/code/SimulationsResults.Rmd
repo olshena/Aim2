@@ -99,7 +99,7 @@ There are 500 simulations performed.
     tabl
     
  
-      lambda.500.uplim<-cbind(unlist(compdc.error.500.uplim.lambda)[1:500],unlist(compthirds.error.500.uplim.lambda),unlist(compRob.CVerror.500.uplim.lambda),unlist(compRob.Error.500.uplim.lambda),unlist(compRob.errorU.500.uplim.lambda),unlist(compRob.error.500.uplim.lambda))
+    lambda.500.uplim<-cbind(unlist(compdc.error.500.uplim.lambda)[1:500],unlist(compthirds.error.500.uplim.lambda),unlist(compRob.CVerror.500.uplim.lambda),unlist(compRob.Error.500.uplim.lambda),unlist(compRob.errorU.500.uplim.lambda),unlist(compRob.error.500.uplim.lambda))
     name.vec <- c("DC","R_CV","R_OpErr","R_AppRes","R_AppCI")
     boxplot(lambda.500.uplim,names=name.vec,ylab="Average Squared Error",main="Friedman 1")
     
