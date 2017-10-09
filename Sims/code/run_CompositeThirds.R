@@ -3,7 +3,7 @@ library("R.utils")
 library("listenv")
 library("future")
 
-source("/Users/annettemolinaro/Respository/Aim2/IntegratingCodeAndText_postAMM.R")
+source("/Users/annettemolinaro/Repository/Aim2/IntegratingCodeAndText_postAMM.R")
 
 
 model<-cmdArg(model="sim1")
@@ -12,7 +12,7 @@ n.training <- cmdArg(n.training=500L)
 n.test <- cmdArg(n.test=1000L)
 n.simulations <- cmdArg(n.simulations=500L)
 name <- paste("data/",model,"_",tag,"_",sep="")
-CompositeThirds <- paste("CompositeThirds/",model,"_",tag,"_",sep="")
+CompositeThirds <- paste("CompositeThirds/October092017/",model,"_",tag,"_",sep="")
   
 for (idx in 1:n.simulations)
 {

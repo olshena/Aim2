@@ -263,8 +263,8 @@ composite.rpart=function(dat,n.grid=20,mult=2,uplim=0,outvar="Y",prop.learning=0
       min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1][1]
       current.fit.pruned<-prune(current.fit,cp=min.CP)
       predicted.fit <- predict(object=current.fit.pruned, data=new.use.dat)
-      error.lambdas[j] <- sum((new.use.dat$outvar.aim2-predicted.fit)^2)
-      fits[[j]] <- current.fit
+      error.lambdas[j] <- sum((new.use.dat$outvar.aim2-predicted.fit)^2)/nrow(new.use.dat)
+      fits[[j]] <- current.fit.pruned
       predictions[[j]] <- predicted.fit
     }
 
@@ -483,7 +483,7 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,uplim = 0,outvar="Y",ver
           min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1][1]
           current.fit.pruned<-prune(current.fit,cp=min.CP)
           predicted.fit <- predict(object=current.fit.pruned, newdata=evaluation.dat)
-          error.lambdas[i,j] <- sum((evaluation.dat$outvar.aim2-predicted.fit)^2)
+          error.lambdas[i,j] <- sum((evaluation.dat$outvar.aim2-predicted.fit)^2)/nrow(evaluation.dat)
           fits[[j]] <- current.fit
           pruneds[[j]] <- current.fit.pruned
           predictions[[j]] <- predicted.fit
@@ -846,13 +846,13 @@ composite.rpart.Grid = function(dat, n.grid = 20, mult = 1, uplim = 10,
                              data = new.use.dat)
     
     # calculate 'apparent error' using 'ci' as response
-    error.lambdas[j] <- sum((new.use.dat$outvar.aim2 - predicted.fit)^2)
+    error.lambdas[j] <- sum((new.use.dat$outvar.aim2 - predicted.fit)^2)/nrow(new.use.dat)
     
     # calculate 'apparent error' using actual response
-    errorU.lambdas[j] <- sum((use.dat$outvar.aim2 - predicted.fit)^2)
+    errorU.lambdas[j] <- sum((use.dat$outvar.aim2 - predicted.fit)^2)/nrow(use.dat)
     
     
-    fits[[j]] <- current.fit
+    fits[[j]] <- current.fit.pruned
     predictions[[j]] <- predicted.fit
   }
   

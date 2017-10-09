@@ -42,6 +42,13 @@ compRob.Error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Repository/Ai
 compRob.error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Repository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_MinErrorLambda.error.lambdas.txt")
 
 ```
+## Composite Methods
+* DC - Simple method we discussed in DC
+* Thirds -- approach splitting data into 3
+* R_CV -- uses CV error
+* R_OpErr -- uses Op-Corr apparent error
+* R_AppRes -- 'apparent error' using actual response
+* R_AppCI -- 'apparent error' using ci response
 
 ## Friedman 1 - Simulation 
 
