@@ -811,7 +811,7 @@ composite.rpart.Grid = function(dat, n.grid = 20, mult = 1, uplim = 10,
   # print(paste('lambda =',lambda))
   
   # grid of lambda values
-  lambdas <- seq(0, uplim, length.out = n.grid)  # list of possible lambdas
+  lambdas <- seq(from=0, to=uplim, length.out = n.grid)  # list of possible lambdas
   n.lambdas <- length(lambdas)  #length of list
   
   error.lambdas <- rep(0, length(lambdas))

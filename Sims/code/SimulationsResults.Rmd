@@ -112,12 +112,17 @@ There are 500 simulations performed.
     tabl
 ```
  
+<<<<<<< HEAD
+    lambda.500.uplim<-cbind(unlist(compdc.error.500.uplim.lambda)[1:500],unlist(compthirds.error.500.uplim.lambda),unlist(compRob.CVerror.500.uplim.lambda),unlist(compRob.Error.500.uplim.lambda),unlist(compRob.errorU.500.uplim.lambda),unlist(compRob.error.500.uplim.lambda))
+    name.vec <- c("DC","R_CV","R_OpErr","R_AppRes","R_AppCI")
+=======
 ## Third Scenario - now looking at lambda values
 ### With a grid for lambda and 500 in the training set and 1000 in the test set  
 ### Lambda chosen for each method (all limited to a grid of 0 to 20 for lambda with 100 points)
 ```{r, echo=FALSE}
       lambda.500.uplim<-cbind(unlist(compdc.error.500.uplim.lambda),unlist(compthirds.error.500.uplim.lambda),unlist(compRob.CVerror.500.uplim.lambda),unlist(compRob.Error.500.uplim.lambda),unlist(compRob.errorU.500.uplim.lambda),unlist(compRob.error.500.uplim.lambda))
     name.vec <- c("DC","Thirds","R_CV","R_OpErr","R_AppRes","R_AppCI")
+>>>>>>> 237b455c7990bbe76d477ce9a5f6a8347e58c2a4
     boxplot(lambda.500.uplim,names=name.vec,ylab="Average Squared Error",main="Friedman 1")
     
     
