@@ -3,7 +3,7 @@ library("R.utils")
 library("listenv")
 library("future")
 
-source("/Users/annettemolinaro/Repository/Aim2/IntegratingCodeAndText_postAMM.R")
+source("/Users/annettemolinaro/Respository/Aim2/IntegratingCodeAndText_postAMM.R")
 
 
 model<-cmdArg(model="sim1")
@@ -35,9 +35,21 @@ for (idx in 1:n.simulations)
   PredictedValuesCurrent<-predict(object=Model$fits[[lambda.num]],newdata=test.data)
   ErrorToTruthCurrent<-(sum(( PredictedValuesCurrent - as.matrix(test.truth))^2))/n.test
   
+<<<<<<< HEAD
   write(MinErrorLambda,paste(CompositeDC,"CompositeDC_Train500_uplim20_MinErrorLambda_",idx,".txt",sep=""),ncol=1)
   write(PredictedValuesCurrent,paste(CompositeDC,"CompositeDC_Train500_uplim20_PredictedValuesCurrent_",idx,".txt",sep=""),ncol=1)
   write(ErrorToTruthCurrent,paste(CompositeDC,"CompositeDC_Train500_uplim20_ErrorToTruthCurrent_",idx,".txt",sep=""),ncol=1)        
+=======
+<<<<<<< HEAD
+  write(MinErrorLambda,paste(CompositeDC,"CompositeDC_Train500_PRUNED_uplim_MinErrorLambda_",idx,".txt",sep=""),ncol=1)
+  write(PredictedValuesCurrent,paste(CompositeDC,"CompositeDC_Train500_PRUNED_uplim_PredictedValuesCurrent_",idx,".txt",sep=""),ncol=1)
+  write(ErrorToTruthCurrent,paste(CompositeDC,"CompositeDC_Train500_PRUNED_uplim_ErrorToTruthCurrent_",idx,".txt",sep=""),ncol=1)        
+=======
+  write(MinErrorLambda,paste(CompositeDC,"CompositeDC_Train500_uplim40_MinErrorLambda_",idx,".txt",sep=""),ncol=1)
+  write(PredictedValuesCurrent,paste(CompositeDC,"CompositeDC_Train500_uplim40_PredictedValuesCurrent_",idx,".txt",sep=""),ncol=1)
+  write(ErrorToTruthCurrent,paste(CompositeDC,"CompositeDC_Train500_uplim40_ErrorToTruthCurrent_",idx,".txt",sep=""),ncol=1)        
+>>>>>>> 684ad738cb016b17d7577626719b1e2fbcb486e1
+>>>>>>> 1d0cd82b1015aebc45b1f439282b175acd1a376b
 }
 
 

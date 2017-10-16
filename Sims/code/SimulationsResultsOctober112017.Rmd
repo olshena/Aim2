@@ -1,0 +1,87 @@
+---
+title: "Simulation Results"
+author: "AMM"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("/Users/annettemolinaro/Repository/Aim2/Sims")
+
+library(vioplot)
+
+compdc.error.500.uplim<-read.table("/Users/annettemolinaro/Repository/Aim2/Sims/friedman1_500_CompositeDC_Train500_uplim20_ErrorToTruth.txt")
+compthirds.error.500.uplim<-read.table("/Users/annettemolinaro/Repository/Aim2/Sims/friedman1_500_CompositeThirds_500_uplim_ErrorToTruth.txt")
+compRob.CVerror.500.uplim<-read.table("/Users/annettemolinaro/Repository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_ErrorToTruth.txt")
+compRob.errorU.500.uplim<-read.table("/Users/annettemolinaro/Repository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_ErrorToTruth.errorU.lambdas.txt")
+compRob.Error.500.uplim<-read.table("/Users/annettemolinaro/Repository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_ErrorToTruth.ErrorOptimisim.Lambdas.txt")
+compRob.error.500.uplim<-read.table("/Users/annettemolinaro/Repository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_ErrorToTruth.error.lambdas.txt")
+
+
+compdc.error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Repository/Aim2/Sims/friedman1_500_CompositeDC_Train500_uplim20_MinErrorLambda.txt")[1:500,]
+compthirds.error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Repository/Aim2/Sims/friedman1_500_CompositeThirds_500_uplim_MinErrorLambda.txt")
+compRob.CVerror.500.uplim.lambda<-read.table("/Users/annettemolinaro/Repository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_MinErrorLambda.txt")
+compRob.errorU.500.uplim.lambda<-read.table("/Users/annettemolinaro/Repository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_MinErrorLambda.errorU.lambdas.txt")
+compRob.Error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Repository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_MinErrorLambda.ErrorOptimisim.Lambdas.txt")
+compRob.error.500.uplim.lambda<-read.table("/Users/annettemolinaro/Repository/Aim2/Sims/friedman1_500_CompositeRob_500_uplim_MinErrorLambda.error.lambdas.txt")
+
+```
+## Composite Methods
+* DC - Simple method we discussed in DC
+* Thirds -- approach splitting data into 3
+* R_CV -- uses CV error
+* R_OpErr -- uses Op-Corr apparent error
+* R_AppRes -- 'apparent error' using actual response
+* R_AppCI -- 'apparent error' using ci response
+
+## Friedman 1 - Simulation 
+
+* $$X_{1}, \cdots,X_{9} \sim U(0,1)$$
+* $$ Y= 10 \sin(\pi X_1\ast X_2)+20(X_{3}-.5)^2+10X_4+5X_{5}+\epsilon$$
+* $$ \epsilon \sim N(0,1)$$
+
+
+There are 73 simulations performed for all methods -- 500 for Thirds and DC and 73 for Rob's. 
+
+
+## Third scenario
+### With a grid for lambda and 500 in the training set and 1000 in the test set  
+### Prediction error of difference between True outcome and predicted outcome.
+```{r,echo=FALSE}
+
+    xy.500.uplim<-cbind(unlist(compdc.error.500.uplim)[1:480],unlist(compthirds.error.500.uplim)[1:480],unlist(compRob.CVerror.500.uplim),unlist(compRob.Error.500.uplim),unlist(compRob.errorU.500.uplim),unlist(compRob.error.500.uplim))
+    name.vec <- c("DC","Thirds","R_CV","R_OpErr","R_AppRes","R_AppCI")
+    boxplot(xy.500.uplim,names=name.vec,ylab="Average Squared Error",main="Friedman 1")
+    vioplot(as.vector(unlist(compdc.error.500.uplim)[1:73]),as.vector(unlist(compthirds.error.500.uplim)[1:73]),as.vector(unlist(compRob.CVerror.500.uplim)),as.vector(unlist(compRob.Error.500.uplim)),as.vector(unlist(compRob.errorU.500.uplim)),as.vector(unlist(compRob.error.500.uplim)),names=name.vec)
+    
+    tabl <- cbind(summary(compdc.error.500.uplim),summary(compthirds.error.500.uplim),summary(compRob.CVerror.500.uplim),summary(compRob.Error.500.uplim),summary(compRob.errorU.500.uplim),summary(compRob.error.500.uplim))
+    colnames(tabl) <- name.vec
+    #write.table(tabl,"Friedman1_table.txt",sep="\t",row.names=TRUE,col.names=TRUE,quote=FALSE)
+    tabl
+```
+ 
+## Third Scenario - now looking at lambda values
+### With a grid for lambda and 500 in the training set and 1000 in the test set  
+### Lambda chosen for each method (all limited to a grid of 0 to 20 for lambda with 100 points)
+```{r, echo=FALSE}
+      lambda.500.uplim<-cbind(unlist(compdc.error.500.uplim.lambda)[1:480],unlist(compthirds.error.500.uplim.lambda)[1:480],unlist(compRob.CVerror.500.uplim.lambda),unlist(compRob.Error.500.uplim.lambda),unlist(compRob.errorU.500.uplim.lambda),unlist(compRob.error.500.uplim.lambda))
+    name.vec <- c("DC","Thirds","R_CV","R_OpErr","R_AppRes","R_AppCI")
+    boxplot(lambda.500.uplim,names=name.vec,ylab="Lambda",main="Friedman 1")
+    
+    
+    vioplot(as.vector(unlist(compdc.error.500.uplim.lambda)[1:480]),as.vector(unlist(compthirds.error.500.uplim.lambda)[1:480]),as.vector(unlist(compRob.CVerror.500.uplim.lambda)),as.vector(unlist(compRob.Error.500.uplim.lambda)),as.vector(unlist(compRob.errorU.500.uplim.lambda)),as.vector(unlist(compRob.error.500.uplim.lambda)),names=name.vec)
+    
+    tabl <- cbind(summary(compdc.error.500.uplim.lambda),summary(compthirds.error.500.uplim.lambda),summary(compRob.CVerror.500.uplim.lambda),summary(compRob.Error.500.uplim.lambda),summary(compRob.errorU.500.uplim.lambda),summary(compRob.error.500.uplim.lambda))
+    colnames(tabl) <- name.vec
+    #write.table(tabl,"Friedman1_table.txt",sep="\t",row.names=TRUE,col.names=TRUE,quote=FALSE)
+    tabl
+```
+
+## Notes from Meeting on 10/11/2017:
+1. add CART on for comparison - plain old CART
+2. increase sample sizes for training set 5k and 10k test set
+3. try running with alpha = 1
+4. do histograms of estimated sigma squared and alphas
+
+magnitude of lambda by itself doesn't mean anything without knowing how it is incorporated into denominator.
