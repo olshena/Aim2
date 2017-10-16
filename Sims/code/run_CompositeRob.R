@@ -12,7 +12,7 @@ n.training <- cmdArg(n.training=500L)
 n.test <- cmdArg(n.test=1000L)
 n.simulations <- cmdArg(n.simulations=500L)
 name <- paste("data/",model,"_",tag,"_",sep="")
-CompositeRob <- paste("CompositeRob/",model,"_",tag,"_",sep="")
+CompositeRob <- paste("CompositeRob/October102017/",model,"_",tag,"_",sep="")
   
 for (idx in 1:n.simulations)
 {

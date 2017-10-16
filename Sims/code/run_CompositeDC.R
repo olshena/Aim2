@@ -29,15 +29,15 @@ for (idx in 1:n.simulations)
   dimnames(test.data)[[2]]<-c("X1","X2","X3","X4","X5","X6","X7","X8","X9")
   test.data<-as.data.frame(test.data)
 
-  system.time(Model<-composite.rpart(dat=training.data.all,n.grid=100,uplim=40,outvar="training.y"))
+  system.time(Model<-composite.rpart(dat=training.data.all,n.grid=100,uplim=20,outvar="training.y"))
   lambda.num<-which(Model$error.lambdas==min(Model$error.lambdas))
   MinErrorLambda<-Model$lambdas[lambda.num]
   PredictedValuesCurrent<-predict(object=Model$fits[[lambda.num]],newdata=test.data)
   ErrorToTruthCurrent<-(sum(( PredictedValuesCurrent - as.matrix(test.truth))^2))/n.test
   
-  write(MinErrorLambda,paste(CompositeDC,"CompositeDC_Train500_uplim40_MinErrorLambda_",idx,".txt",sep=""),ncol=1)
-  write(PredictedValuesCurrent,paste(CompositeDC,"CompositeDC_Train500_uplim40_PredictedValuesCurrent_",idx,".txt",sep=""),ncol=1)
-  write(ErrorToTruthCurrent,paste(CompositeDC,"CompositeDC_Train500_uplim40_ErrorToTruthCurrent_",idx,".txt",sep=""),ncol=1)        
+  write(MinErrorLambda,paste(CompositeDC,"CompositeDC_Train500_uplim20_MinErrorLambda_",idx,".txt",sep=""),ncol=1)
+  write(PredictedValuesCurrent,paste(CompositeDC,"CompositeDC_Train500_uplim20_PredictedValuesCurrent_",idx,".txt",sep=""),ncol=1)
+  write(ErrorToTruthCurrent,paste(CompositeDC,"CompositeDC_Train500_uplim20_ErrorToTruthCurrent_",idx,".txt",sep=""),ncol=1)        
 }
 
 
