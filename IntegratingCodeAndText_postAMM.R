@@ -213,7 +213,7 @@ aim2.text <- function(yval, dev, wt, ylevel, digits, n, use.n )
 
 ## @knitr kcomposite
 
-composite.rpart=function(dat,n.grid=20,mult=2,uplim=0,outvar="Y",prop.learning=0.5)
+composite.rpart=function(dat,n.grid=20,mult=2,uplim=0,outvar="Y",prop.learning=0.5,alpha.Fixed=FALSE)
 {
   n <- nrow(dat)
   which.outcome <- which(colnames(dat)==outvar)
@@ -234,7 +234,9 @@ composite.rpart=function(dat,n.grid=20,mult=2,uplim=0,outvar="Y",prop.learning=0
   var.evaluation <- var(evaluation.dat$outvar.aim2) # $\sigma^2_{Z_1}$
   zbarhat <- mean(predict.rf.evaluation$aggregate) # $ \bar{\hat{Z_1}}$ 
   var.z1s <-  apply(predict.rf.evaluation$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
-  alphas <- 1/var.z1s # $\alpha_i$
+  if(alpha.Fixed){
+    alphas<-rep(1,length=length(var.z1s))
+    }else alphas <- 1/var.z1s # $\alpha_i$
   alphabar <- mean(alphas) # \bar{\alpha}$
   lambda <- var.evaluation/(neval*alphabar*(mean.evaluation-zbarhat)^2) #with-in node 
                                                                         #choice of \lambda
@@ -368,7 +370,7 @@ composite.rpart.thirds.old <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=F
 #this function, composite.rpart.thirds is the correct one
 ## @knitr kcomposite.thirds
 
-composite.rpart.thirds <- function(dat,n.grid=20,mult=2,uplim = 0,outvar="Y",verbose=FALSE)
+composite.rpart.thirds <- function(dat,n.grid=20,mult=2,uplim = 0,outvar="Y",verbose=FALSE,alpha.Fixed=FALSE)
 {
   n <- nrow(dat)
   which.outcome <- which(colnames(dat)==outvar)
@@ -401,7 +403,9 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,uplim = 0,outvar="Y",ver
     var.n2 <- var(n2.dat$outvar.aim2) # $\sigma^2_{Z_1}$
     zbarhat <- mean(predict.rf.n2$aggregate) # $ \bar{\hat{Z_1}}$ 
     var.z1s <-  apply(predict.rf.n2$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
-    alphas <- 1/var.z1s # $\alpha_i$
+    if(alpha.Fixed){
+      alphas<-rep(1,length=length(var.z1s))
+    }else alphas <- 1/var.z1s # $\alpha_i$
                                           # alphas <- alphas/sum(alphas)
     alphabar <- mean(alphas) # \bar{\alpha}$
     lambda <- var.n2/(ndisc*alphabar*(mean.n2-zbarhat)^2) #with-in node #choice of \lambda
@@ -446,7 +450,9 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,uplim = 0,outvar="Y",ver
       var.discovery <- var(discovery.dat$outvar.aim2) # $\sigma^2_{Z_1}$
       zbarhat <- mean(predict.rf.discovery$aggregate) # $ \bar{\hat{Z_1}}$ 
       var.z1s <-  apply(predict.rf.discovery$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
-      alphas <- 1/var.z1s # $\alpha_i$
+      if(alpha.Fixed){
+        alphas<-rep(1,length=length(var.z1s))
+      }else alphas <- 1/var.z1s # $\alpha_i$
                                         # alphas <- alphas/sum(alphas)
       alphabar <- mean(alphas) # \bar{\alpha}$
 #      lambda <- var.discovery/(ndisc*alphabar*(mean.discovery-zbarhat)^2) #with-in node 
@@ -768,7 +774,7 @@ corrected.lambda.LSD <- function(dat, lambdas, list.object, model,
 }
 
 composite.rpart.Grid = function(dat, n.grid = 20, mult = 1, uplim = 10, 
-                           outvar = "Y", prop.learning = 0.5) {
+                           outvar = "Y", prop.learning = 0.5,alpha.Fixed=FALSE) {
   
   n <- nrow(dat)
   which.outcome <- which(colnames(dat) == outvar)
@@ -800,7 +806,10 @@ composite.rpart.Grid = function(dat, n.grid = 20, mult = 1, uplim = 10,
   # Hard to know how to chooose. Need to think about objective.
   # But sensible choice in that high variance predictions would
   # get lower weight
-  alphas <- 1/var.z1s
+
+  if(alpha.Fixed){
+    alphas<-rep(1,length=length(var.z1s))
+  }else alphas <- 1/var.z1s # $\alpha_i$
   # alphas = rep(1,length(var.z1s))
   
   # 'optimal' 'root node' lambda for specified alphas - not
