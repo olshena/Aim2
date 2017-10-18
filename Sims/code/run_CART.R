@@ -32,7 +32,7 @@ for (idx in 1:n.simulations)
   system.time(Model<-rpart(training.y~., dat=training.data.all))
   min.CP<-Model$cptable[which(Model$cptable[,4]==min(Model$cptable[,4])),1][1]
   current.fit.pruned<-prune(Model,cp=min.CP)
-  predicted.fit <- predict(object=current.fit.pruned, data=test.data)
+  predicted.fit <- predict(object=current.fit.pruned, newdata=test.data)
   ErrorToTruthCurrent<-(sum(( predicted.fit - as.matrix(test.truth))^2))/n.test
   
   write(ErrorToTruthCurrent,paste(justCART,"justCART_Train500_PRUNED_ErrorToTruthCurrent_",idx,".txt",sep=""),ncol=1)        

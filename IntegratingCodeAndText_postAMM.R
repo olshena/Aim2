@@ -270,7 +270,7 @@ composite.rpart=function(dat,n.grid=20,mult=2,uplim=0,outvar="Y",prop.learning=0
       predictions[[j]] <- predicted.fit
     }
 
-  list(lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,predictions=predictions)
+  list(lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,predictions=predictions,alphas=alphas,var.z1s=var.z1s)
 }
 
 
@@ -511,7 +511,8 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,uplim = 0,outvar="Y",ver
   min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1][1]
   current.fit.pruned<-prune(current.fit,cp=min.CP)
 # current.fit.pruned is the final model  
-  list(best.lambda=best.lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,current.fit=current.fit,current.fit.pruned=current.fit.pruned,alphas=alphas.all,alphas.lambda=alphas.all*best.lambda,ri=ri)
+  list(best.lambda=best.lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,
+       current.fit=current.fit,current.fit.pruned=current.fit.pruned,alphas=alphas.all,alphas.lambda=alphas.all*best.lambda,ri=ri,var.all=var.all)
 }
 
 ## @knitr kcomposite.thirds.newer
@@ -877,5 +878,5 @@ composite.rpart.Grid = function(dat, n.grid = 20, mult = 1, uplim = 10,
   
   list(lambdas = lambdas, error.lambdas = error.lambdas, errorU.lambdas = errorU.lambdas, 
        Error.lambdas = Error.lambdas, fits = fits, predictions = predictions, 
-       optimism = optimism, CVError.lambdas = CVError.lambdas)
+       optimism = optimism, CVError.lambdas = CVError.lambdas,alphas=alphas,var.z1s=var.z1s)
 }
