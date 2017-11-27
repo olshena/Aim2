@@ -7,12 +7,12 @@ library("rpart")
 
 
 model<-cmdArg(model="sim1")
-tag <-cmdArg(tag="500")
-n.training <- cmdArg(n.training=500L)
-n.test <- cmdArg(n.test=1000L)
+tag <-cmdArg(tag="5000")
+n.training <- cmdArg(n.training=5000L)
+n.test <- cmdArg(n.test=10000L)
 n.simulations <- cmdArg(n.simulations=500L)
 name <- paste("data/",model,"_",tag,"_",sep="")
-justCART <- paste("justCART/October2017/",model,"_",tag,"_",sep="")
+justCART <- paste("justCART/November2017/",model,"_",tag,"_",sep="")
   
 for (idx in 1:n.simulations)
 {
@@ -34,9 +34,11 @@ for (idx in 1:n.simulations)
   current.fit.pruned<-prune(Model,cp=min.CP)
   predicted.fit <- predict(object=current.fit.pruned, newdata=test.data)
   ErrorToTruthCurrent<-(sum(( predicted.fit - as.matrix(test.truth))^2))/n.test
-  
-  write(ErrorToTruthCurrent,paste(justCART,"justCART_Train500_PRUNED_ErrorToTruthCurrent_",idx,".txt",sep=""),ncol=1)        
+  SizeTree<-nrow(Model$cptable)
 
+  write(ErrorToTruthCurrent,paste(justCART,"justCART_Train5000_PRUNED_ErrorToTruthCurrent_",idx,".txt",sep=""),ncol=1)        
+  write(SizeTree,paste(justCART,"justCART_Train5000_PRUNED_SizeTreeTerminalNodes_",idx,".txt",sep=""),ncol=1)   
+ 
 }
 
 
