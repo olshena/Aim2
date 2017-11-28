@@ -7,12 +7,12 @@ source("/Users/annettemolinaro/Respository/Aim2/IntegratingCodeAndText_postAMM.R
 
 
 model<-cmdArg(model="sim1")
-tag <-cmdArg(tag="500")
-n.training <- cmdArg(n.training=500L)
-n.test <- cmdArg(n.test=1000L)
+tag <-cmdArg(tag="5000")
+n.training <- cmdArg(n.training=5000L)
+n.test <- cmdArg(n.test=10000L)
 n.simulations <- cmdArg(n.simulations=500L)
 name <- paste("data/",model,"_",tag,"_",sep="")
-CompositeThirds <- paste("CompositeThirds/",model,"_",tag,"_",sep="")
+CompositeThirds <- paste("CompositeThirds/November2017/NoAlpha/",model,"_",tag,"_",sep="")
   
 for (idx in 1:n.simulations)
 {
@@ -30,14 +30,17 @@ for (idx in 1:n.simulations)
   test.data<-as.data.frame(test.data)
 
     
-  system.time(Model<-composite.rpart.thirds(dat=training.data.all,n.grid=100,mult=4,uplim=20,outvar="training.y"))
+  system.time(Model<-composite.rpart.thirds(dat=training.data.all,n.grid=100,mult=4,uplim=20,outvar="training.y",alpha.Fixed=FALSE))
   PredictedValuesCurrent<-predict(object=Model$current.fit.pruned,newdata=test.data)
   ErrorToTruthCurrent<-(sum(( PredictedValuesCurrent - as.matrix(test.truth))^2))/n.test
   MinErrorLambda<-Model$best.lambda
-  
-  write(MinErrorLambda,paste(CompositeThirds,"CompositeThirds_500_uplim_MinErrorLambda_",idx,".txt",sep=""),ncol=1)
-  write(PredictedValuesCurrent,paste(CompositeThirds,"CompositeThirds_500_uplim_PredictedValuesCurrent_",idx,".txt",sep=""),ncol=1)
-  write(ErrorToTruthCurrent,paste(CompositeThirds,"CompositeThirds_500_uplim_ErrorToTruthCurrent_",idx,".txt",sep=""),ncol=1)        
+  SizeTree<-nrow(Model$fits[[lambda.num]]$cptable)
+
+  write(MinErrorLambda,paste(CompositeThirds,"CompositeThirds_5000_uplim_MinErrorLambda_",idx,".txt",sep=""),ncol=1)
+  write(PredictedValuesCurrent,paste(CompositeThirds,"CompositeThirds_5000_uplim_PredictedValuesCurrent_",idx,".txt",sep=""),ncol=1)
+  write(ErrorToTruthCurrent,paste(CompositeThirds,"CompositeThirds_5000_uplim_ErrorToTruthCurrent_",idx,".txt",sep=""),ncol=1)        
+  write(SizeTree,paste(CompositeThirds,"CompositeThirds_5000_uplim_SizeTreeTerminalNodes_",idx,".txt",sep=""),ncol=1)   
+       
 }
 
 

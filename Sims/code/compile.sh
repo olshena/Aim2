@@ -30,7 +30,6 @@ cat CompositeRob/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent.errorU.lam
 cat CompositeRob/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent.error.lambdas_* > friedman1_500_CompositeRob_500_uplim_ErrorToTruth.error.lambdas.txt
 
 
-
 cat CompositeDC/sim1_500_CompositeDC_Train500_uplim_*MinErrorLambda* > friedman1_500_CompositeDC_Train500_uplim_MinErrorLambda.txt
 cat CompositeThirds/sim1_500_CompositeThirds_500_uplim_*MinErrorLambda* > friedman1_500_CompositeThirds_500_uplim_MinErrorLambda.txt
 cat CompositeRob/sim1_500_CompositeRob_500_uplim_MinErrorLambda* > friedman1_500_CompositeRob_500_uplim_MinErrorLambda.txt
@@ -39,6 +38,7 @@ cat CompositeRob/sim1_500_CompositeRob_500_uplim_MinErrorLambda_errorU.lambdas_*
 cat CompositeRob/sim1_500_CompositeRob_500_uplim_MinErrorLambda_error.lambdas_* > friedman1_500_CompositeRob_500_uplim_MinErrorLambda.error.lambdas.txt
 
 
+<<<<<<< HEAD
 ## November 2017 
 ## For CART, DC and Thirds method with large sample sizes
 
@@ -49,3 +49,50 @@ cat CompositeRob/sim1_500_CompositeRob_500_uplim_MinErrorLambda_ErrorOptimisim.l
 cat CompositeRob/sim1_500_CompositeRob_500_uplim_MinErrorLambda_errorU.lambdas_* > friedman1_500_CompositeRob_500_uplim_MinErrorLambda.errorU.lambdas.txt
 cat CompositeRob/sim1_500_CompositeRob_500_uplim_MinErrorLambda_error.lambdas_* > friedman1_500_CompositeRob_500_uplim_MinErrorLambda.error.lambdas.txt
 
+=======
+
+
+# with 500 in training set  and the same lambda grid --- 
+
+
+cat justCART/October2017/sim1_500_justCART_Train500_PRUNED_*ErrorToTruth* > friedman1_500_justCART_Train500_PRUNED_ErrorToTruth.txt
+cat CompositeDC/October092017/sim1_500_CompositeDC_Train500_uplim20_*ErrorToTruth* > friedman1_500_CompositeDC_Train500_uplim20_ErrorToTruth.txt
+cat CompositeDC/October2017/uplim40/sim1_500_CompositeDC_Train500_PRUNED_uplim_*ErrorToTruth* > friedman1_500_CompositeDC_Train500_uplim40_ErrorToTruth.txt
+cat CompositeThirds/October092017/sim1_500_CompositeThirds_500_uplim_*ErrorToTruth* > friedman1_500_CompositeThirds_500_uplim_ErrorToTruth.txt
+cat CompositeRob/October102017/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent_* > friedman1_500_CompositeRob_500_uplim_ErrorToTruth.txt
+cat CompositeRob/October102017/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent.ErrorOptimisim.lambdas_* > friedman1_500_CompositeRob_500_uplim_ErrorToTruth.ErrorOptimisim.Lambdas.txt
+cat CompositeRob/October102017/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent.errorU.lambdas_* > friedman1_500_CompositeRob_500_uplim_ErrorToTruth.errorU.lambdas.txt
+cat CompositeRob/October102017/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent.error.lambdas_* > friedman1_500_CompositeRob_500_uplim_ErrorToTruth.error.lambdas.txt
+
+
+cat CompositeDC/October092017/sim1_500_CompositeDC_Train500_uplim20_*MinErrorLambda* > friedman1_500_CompositeDC_Train500_uplim20_MinErrorLambda.txt
+cat CompositeDC/October2017/uplim40/sim1_500_CompositeDC_Train500_PRUNED_uplim_*MinErrorLambda* > friedman1_500_CompositeDC_Train500_uplim40_MinErrorLambda.txt
+cat CompositeThirds/October092017/sim1_500_CompositeThirds_500_uplim_*MinErrorLambda* > friedman1_500_CompositeThirds_500_uplim_MinErrorLambda.txt
+cat CompositeRob/October102017/sim1_500_CompositeRob_500_uplim_MinErrorLambda* > friedman1_500_CompositeRob_500_uplim_MinErrorLambda.txt
+cat CompositeRob/October102017/sim1_500_CompositeRob_500_uplim_MinErrorLambda_ErrorOptimisim.lambdas_* > friedman1_500_CompositeRob_500_uplim_MinErrorLambda.ErrorOptimisim.Lambdas.txt
+cat CompositeRob/October102017/sim1_500_CompositeRob_500_uplim_MinErrorLambda_errorU.lambdas_* > friedman1_500_CompositeRob_500_uplim_MinErrorLambda.errorU.lambdas.txt
+cat CompositeRob/October102017/sim1_500_CompositeRob_500_uplim_MinErrorLambda_error.lambdas_* > friedman1_500_CompositeRob_500_uplim_MinErrorLambda.error.lambdas.txt
+
+
+
+
+
+# with ALPHA = 1 -- 500 in training set  and the same lambda grid --- 
+
+
+cat justCART/October2017/sim1_500_justCART_Train500_PRUNED_*ErrorToTruth* > friedman1_500_justCART_Train500_PRUNED_ErrorToTruth.txt
+cat CompositeDC/October2017/alpha1/sim1_500_CompositeDC_Train500_PRUNED_uplim_*ErrorToTruth* > alpha1_friedman1_500_CompositeDC_Train500_PRUNED_ErrorToTruth.txt
+cat CompositeThirds/October2017/alpha1/alpha1sim1_500_CompositeThirds_500_uplim_*ErrorToTruth* > alpha1_friedman1_500_CompositeThirds_500_uplim_ErrorToTruth.txt
+cat CompositeRob/October2017/alpha1/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent_* > alpha1_friedman1_500_CompositeRob_500_uplim_ErrorToTruth.txt
+cat CompositeRob/October2017/alpha1/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent.ErrorOptimisim.lambdas_* > alpha1_friedman1_500_CompositeRob_500_uplim_ErrorToTruth.ErrorOptimisim.Lambdas.txt
+cat CompositeRob/October2017/alpha1/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent.errorU.lambdas_* > alpha1_friedman1_500_CompositeRob_500_uplim_ErrorToTruth.errorU.lambdas.txt
+cat CompositeRob/October2017/alpha1/sim1_500_CompositeRob_500_uplim_*ErrorToTruthCurrent.error.lambdas_* > alpha1_friedman1_500_CompositeRob_500_uplim_ErrorToTruth.error.lambdas.txt
+
+
+cat CompositeDC/October2017/alpha1/sim1_500_CompositeDC_Train500_PRUNED_uplim_*MinErrorLambda* > alpha1_friedman1_500_CompositeDC_Train500_PRUNED_MinErrorLambda.txt
+cat CompositeThirds/October2017/alpha1/alpha1sim1_500_CompositeThirds_500_uplim_*MinErrorLambda* > alpha1_friedman1_500_CompositeThirds_500_uplim_MinErrorLambda.txt
+cat CompositeRob/October2017/alpha1/sim1_500_CompositeRob_500_uplim_MinErrorLambda* > alpha1_friedman1_500_CompositeRob_500_uplim_MinErrorLambda.txt
+cat CompositeRob/October2017/alpha1/sim1_500_CompositeRob_500_uplim_MinErrorLambda_ErrorOptimisim.lambdas_* > alpha1_friedman1_500_CompositeRob_500_uplim_MinErrorLambda.ErrorOptimisim.Lambdas.txt
+cat CompositeRob/October2017/alpha1/sim1_500_CompositeRob_500_uplim_MinErrorLambda_errorU.lambdas_* > alpha1_friedman1_500_CompositeRob_500_uplim_MinErrorLambda.errorU.lambdas.txt
+cat CompositeRob/October2017/alpha1/sim1_500_CompositeRob_500_uplim_MinErrorLambda_error.lambdas_* > alpha1_friedman1_500_CompositeRob_500_uplim_MinErrorLambda.error.lambdas.txt
+>>>>>>> 8a93335ee87cc7e8dd3d87bbed97afc9bc91ca59

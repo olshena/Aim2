@@ -1,0 +1,60 @@
+setwd("/Users/annettemolinaro/Respository/Aim2/Sims")#
+compdc.error<-read.table("friedman1_CompositeDC_ErrorToTruth.txt")#
+compthirds.error<-read.table("friedman1_CompositeThirds_ErrorToTruth.txt")#
+#
+compRob.CVerror<-read.table("friedman1_CompositeRob_ErrorToTruth.txt")#
+compRob.errorU<-read.table("friedman1_CompositeRob_ErrorToTruth.errorU.lambdas.txt")#
+compRob.Error<-read.table("friedman1_CompositeRob_ErrorToTruth.ErrorOptimisim.Lambdas.txt")#
+compRob.error<-read.table("friedman1_CompositeRob_ErrorToTruth.error.lambdas.txt")
+compRob.CVerror
+compRob.error
+compRob.errorU
+compRob.Error
+apply(compdc.error,2,mean)
+apply(compdc.error,2,mean)
+apply(compdc.error,2,mean)#
+sqrt(apply(compdc.error,2,var))#
+#
+#Thirds Method#
+# Model<-composite.rpart.thirds(dat=training.data.all,n.grid=100,mult=4,outvar="training.y")#
+apply(compthirds.error,2,mean)#
+sqrt(apply(compthirds.error,2,var))#
+#
+#Robs Method#
+# Model<-composite.rpart.Grid(dat = training.data.all, n.grid =20, mult = 1, #
+#                                          uplim = 20, outvar = "training.y", prop.learning = 0.5)#
+apply(compRob.CVerror,2,mean)#
+sqrt(apply(compRob.CVerror,2,var))#
+#Robs Method#
+# Model<-composite.rpart.Grid(dat = training.data.all, n.grid =20, mult = 1, #
+#                                          uplim = 20, outvar = "training.y", prop.learning = 0.5)#
+apply(compRob.errorU,2,mean)#
+sqrt(apply(compRob.errorU,2,var))#
+#Robs Method#
+# Model<-composite.rpart.Grid(dat = training.data.all, n.grid =20, mult = 1, #
+#                                          uplim = 20, outvar = "training.y", prop.learning = 0.5)#
+#apply(compRob.Error,2,mean)#
+#sqrt(apply(compRob.Error,2,var))#
+#
+#Robs Method#
+# Model<-composite.rpart.Grid(dat = training.data.all, n.grid =20, mult = 1, #
+#                                          uplim = 20, outvar = "training.y", prop.learning = 0.5)#
+#apply(compRob.error,2,mean)#
+#sqrt(apply(compRob.error,2,var))
+compthirds.error<-read.table("friedman1_CompositeThirds_ErrorToTruth.txt")
+apply(compthirds.error,2,mean)#
+sqrt(apply(compthirds.error,2,var))
+library(vioplot)
+xy<-cbind(compdc.error,#
+compthirds.error, compRob.CVerror,#
+compRob.errorU,#
+compRob.Error,#
+compRob.error)
+xy[1:5,]
+xy<-cbind(compdc.error=compdc.error,#
+compthirds.error, compRob.CVerror,#
+compRob.errorU,#
+compRob.Error,#
+compRob.error)
+xy[1:5,]
+names(xy)

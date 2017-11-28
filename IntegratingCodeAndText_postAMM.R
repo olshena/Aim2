@@ -213,7 +213,7 @@ aim2.text <- function(yval, dev, wt, ylevel, digits, n, use.n )
 
 ## @knitr kcomposite
 
-composite.rpart=function(dat,n.grid=20,mult=2,uplim=0,outvar="Y",prop.learning=0.5)
+composite.rpart=function(dat,n.grid=20,mult=2,uplim=0,outvar="Y",prop.learning=0.5,alpha.Fixed=FALSE)
 {
   n <- nrow(dat)
   which.outcome <- which(colnames(dat)==outvar)
@@ -234,7 +234,9 @@ composite.rpart=function(dat,n.grid=20,mult=2,uplim=0,outvar="Y",prop.learning=0
   var.evaluation <- var(evaluation.dat$outvar.aim2) # $\sigma^2_{Z_1}$
   zbarhat <- mean(predict.rf.evaluation$aggregate) # $ \bar{\hat{Z_1}}$ 
   var.z1s <-  apply(predict.rf.evaluation$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
-  alphas <- 1/var.z1s # $\alpha_i$
+  if(alpha.Fixed){
+    alphas<-rep(1,length=length(var.z1s))
+    }else alphas <- 1/var.z1s # $\alpha_i$
   alphabar <- mean(alphas) # \bar{\alpha}$
   lambda <- var.evaluation/(neval*alphabar*(mean.evaluation-zbarhat)^2) #with-in node 
                                                                         #choice of \lambda
@@ -263,12 +265,12 @@ composite.rpart=function(dat,n.grid=20,mult=2,uplim=0,outvar="Y",prop.learning=0
       min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1][1]
       current.fit.pruned<-prune(current.fit,cp=min.CP)
       predicted.fit <- predict(object=current.fit.pruned, data=new.use.dat)
-      error.lambdas[j] <- sum((new.use.dat$outvar.aim2-predicted.fit)^2)
-      fits[[j]] <- current.fit
+      error.lambdas[j] <- sum((new.use.dat$outvar.aim2-predicted.fit)^2)/nrow(new.use.dat)
+      fits[[j]] <- current.fit.pruned
       predictions[[j]] <- predicted.fit
     }
 
-  list(lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,predictions=predictions)
+  list(lambda=lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,predictions=predictions,alphas=alphas,var.z1s=var.z1s)
 }
 
 
@@ -368,7 +370,7 @@ composite.rpart.thirds.old <- function(dat,n.grid=20,mult=2,outvar="Y",verbose=F
 #this function, composite.rpart.thirds is the correct one
 ## @knitr kcomposite.thirds
 
-composite.rpart.thirds <- function(dat,n.grid=20,mult=2,uplim = 0,outvar="Y",verbose=FALSE)
+composite.rpart.thirds <- function(dat,n.grid=20,mult=2,uplim = 0,outvar="Y",verbose=FALSE,alpha.Fixed=FALSE)
 {
   n <- nrow(dat)
   which.outcome <- which(colnames(dat)==outvar)
@@ -401,7 +403,9 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,uplim = 0,outvar="Y",ver
     var.n2 <- var(n2.dat$outvar.aim2) # $\sigma^2_{Z_1}$
     zbarhat <- mean(predict.rf.n2$aggregate) # $ \bar{\hat{Z_1}}$ 
     var.z1s <-  apply(predict.rf.n2$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
-    alphas <- 1/var.z1s # $\alpha_i$
+    if(alpha.Fixed){
+      alphas<-rep(1,length=length(var.z1s))
+    }else alphas <- 1/var.z1s # $\alpha_i$
                                           # alphas <- alphas/sum(alphas)
     alphabar <- mean(alphas) # \bar{\alpha}$
     lambda <- var.n2/(ndisc*alphabar*(mean.n2-zbarhat)^2) #with-in node #choice of \lambda
@@ -446,7 +450,9 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,uplim = 0,outvar="Y",ver
       var.discovery <- var(discovery.dat$outvar.aim2) # $\sigma^2_{Z_1}$
       zbarhat <- mean(predict.rf.discovery$aggregate) # $ \bar{\hat{Z_1}}$ 
       var.z1s <-  apply(predict.rf.discovery$individual,1,var) # $\sigma^2_{\hat{Z_1i}}$
-      alphas <- 1/var.z1s # $\alpha_i$
+      if(alpha.Fixed){
+        alphas<-rep(1,length=length(var.z1s))
+      }else alphas <- 1/var.z1s # $\alpha_i$
                                         # alphas <- alphas/sum(alphas)
       alphabar <- mean(alphas) # \bar{\alpha}$
 #      lambda <- var.discovery/(ndisc*alphabar*(mean.discovery-zbarhat)^2) #with-in node 
@@ -483,7 +489,7 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,uplim = 0,outvar="Y",ver
           min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1][1]
           current.fit.pruned<-prune(current.fit,cp=min.CP)
           predicted.fit <- predict(object=current.fit.pruned, newdata=evaluation.dat)
-          error.lambdas[i,j] <- sum((evaluation.dat$outvar.aim2-predicted.fit)^2)
+          error.lambdas[i,j] <- sum((evaluation.dat$outvar.aim2-predicted.fit)^2)/nrow(evaluation.dat)
           fits[[j]] <- current.fit
           pruneds[[j]] <- current.fit.pruned
           predictions[[j]] <- predicted.fit
@@ -505,7 +511,8 @@ composite.rpart.thirds <- function(dat,n.grid=20,mult=2,uplim = 0,outvar="Y",ver
   min.CP<-current.fit$cptable[which(current.fit$cptable[,4]==min(current.fit$cptable[,4])),1][1]
   current.fit.pruned<-prune(current.fit,cp=min.CP)
 # current.fit.pruned is the final model  
-  list(best.lambda=best.lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,current.fit=current.fit,current.fit.pruned=current.fit.pruned,alphas=alphas.all,alphas.lambda=alphas.all*best.lambda,ri=ri)
+  list(best.lambda=best.lambda,lambdas=lambdas,error.lambdas=error.lambdas,fits=fits,pruneds=pruneds,predictions=predictions,
+       current.fit=current.fit,current.fit.pruned=current.fit.pruned,alphas=alphas.all,alphas.lambda=alphas.all*best.lambda,ri=ri,var.all=var.all)
 }
 
 ## @knitr kcomposite.thirds.newer
@@ -768,7 +775,7 @@ corrected.lambda.LSD <- function(dat, lambdas, list.object, model,
 }
 
 composite.rpart.Grid = function(dat, n.grid = 20, mult = 1, uplim = 10, 
-                           outvar = "Y", prop.learning = 0.5) {
+                           outvar = "Y", prop.learning = 0.5,alpha.Fixed=FALSE) {
   
   n <- nrow(dat)
   which.outcome <- which(colnames(dat) == outvar)
@@ -800,7 +807,10 @@ composite.rpart.Grid = function(dat, n.grid = 20, mult = 1, uplim = 10,
   # Hard to know how to chooose. Need to think about objective.
   # But sensible choice in that high variance predictions would
   # get lower weight
-  alphas <- 1/var.z1s
+
+  if(alpha.Fixed){
+    alphas<-rep(1,length=length(var.z1s))
+  }else alphas <- 1/var.z1s # $\alpha_i$
   # alphas = rep(1,length(var.z1s))
   
   # 'optimal' 'root node' lambda for specified alphas - not
@@ -811,7 +821,7 @@ composite.rpart.Grid = function(dat, n.grid = 20, mult = 1, uplim = 10,
   # print(paste('lambda =',lambda))
   
   # grid of lambda values
-  lambdas <- seq(0, uplim, length.out = n.grid)  # list of possible lambdas
+  lambdas <- seq(from=0, to=uplim, length.out = n.grid)  # list of possible lambdas
   n.lambdas <- length(lambdas)  #length of list
   
   error.lambdas <- rep(0, length(lambdas))
@@ -846,13 +856,13 @@ composite.rpart.Grid = function(dat, n.grid = 20, mult = 1, uplim = 10,
                              data = new.use.dat)
     
     # calculate 'apparent error' using 'ci' as response
-    error.lambdas[j] <- sum((new.use.dat$outvar.aim2 - predicted.fit)^2)
+    error.lambdas[j] <- sum((new.use.dat$outvar.aim2 - predicted.fit)^2)/nrow(new.use.dat)
     
     # calculate 'apparent error' using actual response
-    errorU.lambdas[j] <- sum((use.dat$outvar.aim2 - predicted.fit)^2)
+    errorU.lambdas[j] <- sum((use.dat$outvar.aim2 - predicted.fit)^2)/nrow(use.dat)
     
     
-    fits[[j]] <- current.fit
+    fits[[j]] <- current.fit.pruned
     predictions[[j]] <- predicted.fit
   }
   
@@ -868,5 +878,5 @@ composite.rpart.Grid = function(dat, n.grid = 20, mult = 1, uplim = 10,
   
   list(lambdas = lambdas, error.lambdas = error.lambdas, errorU.lambdas = errorU.lambdas, 
        Error.lambdas = Error.lambdas, fits = fits, predictions = predictions, 
-       optimism = optimism, CVError.lambdas = CVError.lambdas)
+       optimism = optimism, CVError.lambdas = CVError.lambdas,alphas=alphas,var.z1s=var.z1s)
 }
